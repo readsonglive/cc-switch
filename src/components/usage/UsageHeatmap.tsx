@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import type { UsageRangeSelection } from "@/types/usage";
 import {
   fmtUsd,
-  formatTokensShort,
+  formatTokensCompact,
   getLocaleFromLanguage,
   parseFiniteNumber,
 } from "./format";
@@ -341,8 +341,8 @@ export function UsageHeatmap({
               </h3>
               <span className="text-caption tabular-nums text-fg-3">
                 {t("usage.heatmap.spanSummary", {
-                  tokens: formatTokensShort(span.totals.tokens, language),
-                  requests: formatTokensShort(span.totals.requests, language),
+                  tokens: formatTokensCompact(span.totals.tokens, locale),
+                  requests: formatTokensCompact(span.totals.requests, locale),
                   cost: fmtUsd(span.totals.cost, 2),
                 })}
               </span>

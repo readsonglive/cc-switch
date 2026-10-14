@@ -6,7 +6,6 @@ import {
   formatOutputTokensPerSecond,
   formatTokensCompact,
   formatTokensPerSecond,
-  formatTokensShort,
   getAggregateTokensPerSecond,
   getEstimatedTokensPerSecond,
   getOutputTokensPerSecond,
@@ -15,9 +14,17 @@ import {
 } from "@/components/usage/format";
 
 describe("usage format helpers", () => {
-  it("formats Traditional Chinese token units with Traditional characters", () => {
-    expect(formatTokensShort(12_345, "zh-TW")).toBe("1.2 萬");
-    expect(formatTokensShort(123_456_789, "zh-Hant", 2)).toBe("1.23 億");
+  it("uses CJK magnitude units for Chinese and Japanese locales", () => {
+    expect(formatTokensCompact(12_345, "zh-TW")).toBe("1.23萬");
+    expect(formatTokensCompact(123_456_789, "zh-TW")).toBe("1.23億");
+    expect(formatTokensCompact(60_500_000, "zh-CN")).toBe("6050万");
+    expect(formatTokensCompact(674_000_000, "zh-CN")).toBe("6.74亿");
+    expect(formatTokensCompact(3_110_000, "zh-CN")).toBe("311万");
+    expect(formatTokensCompact(76_840_486, "zh-CN")).toBe("7680万");
+    expect(formatTokensCompact(60_500_000, "zh-TW")).toBe("6050萬");
+    // 日语的「億」来自 CLDR，与繁中一致，不回退成简中的「亿」
+    expect(formatTokensCompact(674_000_000, "ja-JP")).toBe("6.74億");
+    expect(formatTokensCompact(674_000_000, "en-US")).toBe("674M");
   });
 
   it("resolves Traditional Chinese locale aliases", () => {

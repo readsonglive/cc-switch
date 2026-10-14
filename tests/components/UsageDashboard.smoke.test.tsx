@@ -144,9 +144,9 @@ describe("UsageDashboard (smoke)", () => {
       </QueryClientProvider>,
     );
 
-    // 指标卡
+    // 指标卡：locale 被 mock 成 zh，1820万 而不是 18.2M
     expect(await screen.findByText("$42.10")).toBeInTheDocument();
-    expect(screen.getByText("18.2M")).toBeInTheDocument();
+    expect(screen.getByText("1820万")).toBeInTheDocument();
     // 「全部」时由各应用的 token 重新算：16.6M ÷ (1M + 0.2M + 16.6M)
     expect(screen.getByText("93.3%")).toBeInTheDocument();
     expect(screen.getByText("usage.trend.title")).toBeInTheDocument();

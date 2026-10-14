@@ -13,8 +13,8 @@ import { SegmentedControl } from "@/components/ui/segmented-control";
 import { useUsageTrends } from "@/lib/query/usage";
 import { Loader2 } from "lucide-react";
 import {
-  fmtInt,
   fmtUsd,
+  formatTokensCompact,
   getLocaleFromLanguage,
   parseFiniteNumber,
 } from "./format";
@@ -218,7 +218,9 @@ export function UsageTrendChart({
         : t("usage.trend.cost");
 
   const formatMetric = (value: unknown) =>
-    metric === "cost" ? fmtUsd(value, 4) : fmtInt(value, dateLocale);
+    metric === "cost"
+      ? fmtUsd(value, 4)
+      : formatTokensCompact(value, dateLocale);
   const formatYTick = (value: unknown) =>
     metric === "cost"
       ? `$${parseFiniteNumber(value) ?? 0}`

@@ -181,7 +181,12 @@ export function formatEstimatedTokensPerSecond(
 
 /**
  * 表格和指标卡里的 Token 数：1 万以下写全（带千分位），以上压成最多 3 位有效数字
- * （48.2K、189K、18.2M），精确值放进 title。四种语言都用 K/M/B，和画板一致。
+ * （英文 48.2K、189K、18.2M；简中 4.82万、18.9万、1820万；繁中 4.82萬；日语 4.82万），
+ * 精确值放进 title。
+ *
+ * Why: 单位交给 Intl 的 compact 简写，中日文才自然落到「万/亿」而不用自己维护一份
+ * 量纲表；`maximumSignificantDigits: 3` 而非 `maximumFractionDigits` 是为了保住英文
+ * 侧既有的 3 位有效数字（48.2K 不是 48K）。趋势图 Y 轴用的是同一套 Intl 口径。
  */
 export function formatTokensCompact(value: unknown, locale?: string): string {
   const num = parseFiniteNumber(value);
@@ -190,6 +195,20 @@ export function formatTokensCompact(value: unknown, locale?: string): string {
   if (abs < 10_000) {
     return new Intl.NumberFormat(locale).format(Math.round(num));
   }
+  try {
+    return new Intl.NumberFormat(locale, {
+      notation: "compact",
+      compactDisplay: "short",
+      maximumSignificantDigits: 3,
+    }).format(num);
+  } catch {
+    return formatTokensCompactAscii(num);
+  }
+}
+
+/** 运行时不支持 compact 简写时的兜底：固定 K/M/B，不区分语言。 */
+function formatTokensCompactAscii(num: number): string {
+  const abs = Math.abs(num);
   const units: Array<[number, string]> = [
     [1e9, "B"],
     [1e6, "M"],
@@ -257,37 +276,6 @@ export function joinNames(items: readonly string[], lang: string): string {
 /** 并列的分句：中日文用「；」，其他语言用分号。 */
 export function joinClauses(items: readonly string[], lang: string): string {
   return items.join(isCjkLanguage(lang) ? "；" : "; ");
-}
-
-/**
- * Token 数量的紧凑显示。
- *
- * Why: 中日文用户期待 "亿/万" 量纲；英文用户期待 K/M/B。共用同一份格式化
- * 逻辑避免 Hero 卡和分应用卡显示不一致。`compactDecimals=2` 用于 Hero
- * 大数副标（更精确），默认 1 位用于卡片副字段。
- */
-export function formatTokensShort(
-  value: number,
-  lang: string,
-  compactDecimals: 1 | 2 = 1,
-): string {
-  if (!Number.isFinite(value) || value <= 0) return "0";
-  const decimals = compactDecimals;
-  const normalizedLang = normalizeLanguageTag(lang);
-  if (isTraditionalChineseLanguage(normalizedLang)) {
-    if (value >= 1e8) return `${(value / 1e8).toFixed(2)} 億`;
-    if (value >= 1e4) return `${(value / 1e4).toFixed(decimals)} 萬`;
-    return value.toLocaleString("zh-TW");
-  }
-  if (normalizedLang.startsWith("zh") || normalizedLang.startsWith("ja")) {
-    if (value >= 1e8) return `${(value / 1e8).toFixed(2)} 亿`;
-    if (value >= 1e4) return `${(value / 1e4).toFixed(decimals)} 万`;
-    return value.toLocaleString();
-  }
-  if (value >= 1e9) return `${(value / 1e9).toFixed(2)}B`;
-  if (value >= 1e6) return `${(value / 1e6).toFixed(2)}M`;
-  if (value >= 1e3) return `${(value / 1e3).toFixed(decimals)}K`;
-  return value.toLocaleString();
 }
 
 /** 「刚刚」「N 分钟前」「N 小时前」「N 天前」 */
