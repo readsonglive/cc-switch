@@ -40,6 +40,14 @@ export const iconMetadata: Record<string, IconMetadata> = {
     ],
     defaultColor: "#3A3B40",
   },
+  aicoming: {
+    name: "aicoming",
+    displayName: "AIComing",
+    category: "ai-provider",
+    shape: "tile",
+    keywords: ["aicoming", "aggregator", "relay", "gateway"],
+    defaultColor: "currentColor",
+  },
   aigocode: {
     name: "aigocode",
     displayName: "AIGoCode",
@@ -504,6 +512,14 @@ export const iconMetadata: Record<string, IconMetadata> = {
     keywords: [],
     defaultColor: "currentColor",
   },
+  grooroute: {
+    name: "grooroute",
+    displayName: "GrooRoute Pro",
+    category: "ai-provider",
+    shape: "tile",
+    keywords: ["grooroute", "aggregator", "relay", "gateway"],
+    defaultColor: "currentColor",
+  },
   huawei: {
     name: "huawei",
     displayName: "Huawei",
@@ -892,6 +908,12 @@ export const iconMetadata: Record<string, IconMetadata> = {
     category: "ai-provider",
     keywords: ["stepfun", "step", "jieyue", "阶跃星辰"],
     defaultColor: "#005AFF",
+  },
+  streamlake: {
+    name: "streamlake",
+    displayName: "StreamLake",
+    category: "ai-provider",
+    keywords: ["streamlake", "vanchin", "wanqing", "万擎", "快手", "kwai"],
   },
   ppio: {
     name: "ppio",
