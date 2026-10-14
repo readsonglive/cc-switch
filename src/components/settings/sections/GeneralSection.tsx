@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { ChevronRight, Monitor, Moon, Sun } from "lucide-react";
+import type { Settings } from "@/types";
 import type { SettingsFormState } from "@/hooks/useSettings";
 import { useTheme } from "@/components/theme-provider";
 import { SegmentedControl } from "@/components/ui/segmented-control";
@@ -21,6 +22,20 @@ import {
 } from "@/components/settings/SettingsLayout";
 
 type Language = SettingsFormState["language"];
+type UpdateCheckFrequency = NonNullable<Settings["updateCheckFrequency"]>;
+
+// Radix 的 Select 不允许空串 value；用哨兵值 "manual" 表示"仅手动"
+const MANUAL_SENTINEL = "manual";
+
+const UPDATE_FREQ_OPTIONS: { value: UpdateCheckFrequency; labelKey: string }[] = [
+  { value: "hourly", labelKey: "settings.general.updateFreqHourly" },
+  { value: "daily", labelKey: "settings.general.updateFreqDaily" },
+  { value: "weekly", labelKey: "settings.general.updateFreqWeekly" },
+  { value: "yearly", labelKey: "settings.general.updateFreqYearly" },
+];
+
+const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
+const DAY_OPTIONS = Array.from({ length: 31 }, (_, i) => i + 1);
 
 const LANGUAGES: { value: Language; labelKey: string }[] = [
   { value: "zh", labelKey: "settings.languageOptionChinese" },
@@ -179,6 +194,128 @@ export function GeneralSection({
               void onAutoSave({ checkToolUpdatesOnStartup: value })
             }
           />
+          <SettingsRow
+            label={t("settings.general.updateCheckFrequency")}
+            help={{
+              title: t("settings.general.updateCheckFrequency"),
+              body: t("settings.general.updateCheckFrequencyHelp"),
+            }}
+            control={
+              <Select
+                value={settings.updateCheckFrequency ?? MANUAL_SENTINEL}
+                onValueChange={(value) =>
+                  void onAutoSave({
+                    updateCheckFrequency:
+                      value === MANUAL_SENTINEL
+                        ? undefined
+                        : (value as UpdateCheckFrequency),
+                    // 切到「仅手动」或离开年频率时，清理无用的字段
+                    ...(value === MANUAL_SENTINEL
+                      ? {
+                          updateCheckTime: undefined,
+                          updateCheckMonth: undefined,
+                          updateCheckDay: undefined,
+                        }
+                      : {}),
+                    ...(value !== MANUAL_SENTINEL && value !== "yearly"
+                      ? {
+                          updateCheckMonth: undefined,
+                          updateCheckDay: undefined,
+                        }
+                      : {}),
+                  })
+                }
+              >
+                <SelectTrigger
+                  className="h-8 w-[160px]"
+                  aria-label={t("settings.general.updateCheckFrequency")}
+                >
+                  <SelectValue
+                    placeholder={t("settings.general.updateFreqManual")}
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={MANUAL_SENTINEL}>
+                    {t("settings.general.updateFreqManual")}
+                  </SelectItem>
+                  {UPDATE_FREQ_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {t(opt.labelKey)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            }
+          />
+          {settings.updateCheckFrequency === "yearly" ? (
+            <>
+              <SettingsRow
+                label={t("settings.general.updateCheckMonth")}
+                control={
+                  <Select
+                    value={String(settings.updateCheckMonth ?? 1)}
+                    onValueChange={(value) =>
+                      void onAutoSave({ updateCheckMonth: Number(value) })
+                    }
+                  >
+                    <SelectTrigger
+                      className="h-8 w-[160px]"
+                      aria-label={t("settings.general.updateCheckMonth")}
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {MONTH_OPTIONS.map((m) => (
+                        <SelectItem key={m} value={String(m)}>
+                          {m}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                }
+              />
+              <SettingsRow
+                label={t("settings.general.updateCheckDay")}
+                control={
+                  <Select
+                    value={String(settings.updateCheckDay ?? 1)}
+                    onValueChange={(value) =>
+                      void onAutoSave({ updateCheckDay: Number(value) })
+                    }
+                  >
+                    <SelectTrigger
+                      className="h-8 w-[160px]"
+                      aria-label={t("settings.general.updateCheckDay")}
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DAY_OPTIONS.map((d) => (
+                        <SelectItem key={d} value={String(d)}>
+                          {d}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                }
+              />
+            </>
+          ) : settings.updateCheckFrequency ? (
+            <SettingsRow
+              label={t("settings.general.updateCheckTime")}
+              control={
+                <input
+                  type="time"
+                  step={1}
+                  className="h-8 rounded-control border border-border-strong bg-surface px-2 text-body text-fg-1 transition-[border-color,box-shadow] focus:border-ring focus:outline-none focus:ring-[3px] focus:ring-ring/20 dark:focus:ring-ring/15"
+                  value={settings.updateCheckTime ?? "00:00:00"}
+                  onChange={(e) =>
+                    void onAutoSave({ updateCheckTime: e.target.value })
+                  }
+                />
+              }
+            />
+          ) : null}
         </SettingsCard>
       </SettingsBlock>
 

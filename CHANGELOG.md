@@ -5,6 +5,12 @@ All notable changes to CC Switch will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **New Author**: Added `readsonglive` as a project author, listed alongside Jason Young in `package.json` and the README author sections.
+
 ## [4.0.9] - 2026-10-11
 
 The fifth patch release on the 4.0 stable line. Codex threads that carry tool results with no matching call, such as the create_thread receipt the Codex desktop app injects into new threads, no longer fail on strict Chat upstreams (HTTP 400) or xAI native Responses (HTTP 422). Clients that cannot reach the host's loopback, such as Claude Desktop sessions in WSL2, can be given a separate connection address for local routing. Fetched models are now picked in a dialog that can also remove them and shows each model's parameters, Codex can set a default sub-agent model and reasoning effort, and the provider forms move field explanations into help tips. Other fixes cover OpenAI-format Claude upstreams receiving `x-api-key`, aggregation compatibility switches, the UI language on cold start, macOS local network access and flicker when opening the provider editor.

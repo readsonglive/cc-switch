@@ -574,6 +574,11 @@ For development setup, pre-submit checks, and architecture notes, see [CONTRIBUT
 
 [![Star History Chart](https://api.star-history.com/svg?repos=farion1231/cc-switch&type=Date)](https://www.star-history.com/#farion1231/cc-switch&Date)
 
+## Authors
+
+- Jason Young
+- readsonglive
+
 ## License
 
 MIT © Jason Young

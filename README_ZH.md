@@ -575,6 +575,11 @@ CC_SWITCH_GDK_BACKEND=wayland ./CC-Switch-*.AppImage
 
 [![Star History Chart](https://api.star-history.com/svg?repos=farion1231/cc-switch&type=Date)](https://www.star-history.com/#farion1231/cc-switch&Date)
 
+## 作者
+
+- Jason Young
+- readsonglive
+
 ## License
 
 MIT © Jason Young

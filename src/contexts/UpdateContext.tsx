@@ -6,9 +6,69 @@ import React, {
   useCallback,
   useRef,
 } from "react";
+import { useSettingsQuery } from "@/lib/query";
+import type { Settings } from "@/types";
 import type { UpdateInfo } from "../lib/updater";
 import { checkForUpdate } from "../lib/updater";
 import { extractErrorMessage } from "../utils/errorUtils";
+
+/**
+ * 计算下一个自动检查更新的触发时间（毫秒时间戳）。
+ * - yearly: 指定月/日的 00:00:00（当年若未到则用当年，否则次年）
+ * - hourly/daily/weekly: 指定时刻 HH:mm:ss；hourly/daily 取当天/次日，weekly 取当周/下周
+ * - frequency 为空（manual）返回 null
+ */
+export function computeNextCheckTime(
+  s: Pick<
+    Settings,
+    "updateCheckFrequency" | "updateCheckTime" | "updateCheckMonth" | "updateCheckDay"
+  >,
+  now: Date,
+): number | null {
+  const freq = s.updateCheckFrequency;
+  if (!freq) return null;
+
+  if (freq === "yearly") {
+    const month = Math.min(12, Math.max(1, s.updateCheckMonth ?? 1));
+    const day = Math.min(31, Math.max(1, s.updateCheckDay ?? 1));
+    // 该年该月该日（若无效则顺延到该月最大天数）
+    const candidate = new Date(now.getFullYear(), month - 1, day);
+    const target = candidate.getTime() > now.getTime() ? candidate : null;
+    if (target) return target.getTime();
+    return new Date(now.getFullYear() + 1, month - 1, day).getTime();
+  }
+
+  // 解析 HH:mm:ss
+  const m = /^(?:(\d{1,2}):)?(?:(\d{1,2}):)?(\d{1,2})$/.exec(
+    s.updateCheckTime ?? "",
+  );
+  const hour = m?.[1] != null ? Math.min(23, Number(m[1])) : 0;
+  const minute = m?.[2] != null ? Math.min(59, Number(m[2])) : 0;
+  const second = m?.[3] != null ? Math.min(59, Number(m[3])) : 0;
+
+  const target = new Date(now);
+  target.setHours(hour, minute, second, 0);
+
+  if (freq === "hourly") {
+    // 每小时的指定 mm:ss；若当前小时已错过，滚动到下一小时（可能跨天）
+    const currentHour = now.getHours();
+    target.setHours(currentHour + 1, minute, second, 0);
+    return target.getTime();
+  }
+
+  if (freq === "daily") {
+    if (target.getTime() <= now.getTime()) {
+      target.setDate(target.getDate() + 1);
+    }
+    return target.getTime();
+  }
+
+  // weekly: 每天在设定时刻都触发一次，间隔恰好 7 天（"每周同一时刻"）
+  if (target.getTime() <= now.getTime()) {
+    target.setDate(target.getDate() + 7);
+  }
+  return target.getTime();
+}
 
 interface UpdateContextValue {
   // 更新状态
@@ -58,6 +118,7 @@ export function UpdateProvider({ children }: { children: React.ReactNode }) {
   }, [updateInfo?.availableVersion]);
 
   const isCheckingRef = useRef(false);
+  const { data: settingsData } = useSettingsQuery();
 
   const checkUpdate = useCallback(async () => {
     if (isCheckingRef.current) return false;
@@ -125,6 +186,46 @@ export function UpdateProvider({ children }: { children: React.ReactNode }) {
 
     return () => clearTimeout(timer);
   }, [checkUpdate]);
+
+  // 按用户配置频率周期性自动检查更新
+  // 设置改变时重新调度；用 setTimeout 跳到下一个匹配时刻，触发后再调度下一次
+  const freq = settingsData?.updateCheckFrequency;
+  const timeKey = [
+    freq,
+    settingsData?.updateCheckTime,
+    settingsData?.updateCheckMonth,
+    settingsData?.updateCheckDay,
+  ].join("|");
+
+  useEffect(() => {
+    if (!freq) return; // 手动模式：不周期检查
+
+    let cancelled = false;
+    let timerId: ReturnType<typeof setTimeout>;
+
+    const scheduleNext = () => {
+      if (cancelled) return;
+      const next = computeNextCheckTime(settingsData ?? {}, new Date());
+      if (next == null) return; // 配置被清空了
+      const delay = Math.max(0, next - Date.now());
+      timerId = setTimeout(async () => {
+        try {
+          await checkUpdate();
+        } catch (err) {
+          console.error("[UpdateContext] 周期检查更新失败:", err);
+        }
+        // 触发后重新调度下一次
+        scheduleNext();
+      }, delay);
+    };
+
+    scheduleNext();
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timerId);
+    };
+  }, [timeKey, checkUpdate]);
 
   const value: UpdateContextValue = {
     hasUpdate,

@@ -405,6 +405,14 @@ export interface Settings {
   showProviderSearch?: boolean;
   // 启动时检查已安装的命令行应用有没有新版本（默认关）
   checkToolUpdatesOnStartup?: boolean;
+  // 自动检查更新频率（默认 undefined = 仅手动检查）
+  updateCheckFrequency?: "hourly" | "daily" | "weekly" | "yearly";
+  // 自动检查更新的时间（HH:mm:ss，精确到秒），用于小时/天/周频率
+  updateCheckTime?: string;
+  // 自动检查更新的月份（1-12），用于年频率
+  updateCheckMonth?: number;
+  // 自动检查更新的日期（1-31），用于年频率
+  updateCheckDay?: number;
   // Preserve Codex ChatGPT login in auth.json when switching third-party providers
   preserveCodexOfficialAuthOnSwitch?: boolean;
   // Run official Codex under the shared "custom" provider id so future

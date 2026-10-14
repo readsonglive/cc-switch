@@ -16,7 +16,12 @@
     "test:unit:watch": "vitest watch"
   },
   "keywords": [],
-  "author": "Jason Young",
+  "author": [
+    "Jason Young",
+    {
+      "name": "readsonglive"
+    }
+  ],
   "license": "MIT",
   "packageManager": "pnpm@10.12.3",
   "devDependencies": {
