@@ -81,6 +81,36 @@ const normalizeRefreshInterval = (value: number | undefined) =>
 
 const STATUS_CODE_OPTIONS = [200, 400, 401, 429, 500] as const;
 
+// 用量页自带的界面语言选择：5 种界面语言，和「设置 → 界面语言」共用一份翻译，
+// 但只在本页生效（进页面套用、离开页面还原），也只记在本机 localStorage。
+const USAGE_LANGUAGES = ["zh", "zh-TW", "en", "ja", "tr"] as const;
+type UsageLanguage = (typeof USAGE_LANGUAGES)[number];
+const USAGE_LANGUAGE_LABEL_KEYS: Record<UsageLanguage, string> = {
+  zh: "settings.languageOptionChinese",
+  "zh-TW": "settings.languageOptionTraditionalChinese",
+  en: "settings.languageOptionEnglish",
+  ja: "settings.languageOptionJapanese",
+  tr: "settings.languageOptionTurkish",
+};
+/** 把 i18n 的语言码收拢到本页支持的 5 种之一（认不出按简体中文） */
+const normalizeUsageLanguage = (
+  value: string | null | undefined,
+): UsageLanguage => {
+  const normalized = (value ?? "").toLowerCase().replace(/_/g, "-");
+  if (
+    normalized === "zh-tw" ||
+    normalized.startsWith("zh-hant") ||
+    normalized.startsWith("zh-hk") ||
+    normalized.startsWith("zh-mo")
+  ) {
+    return "zh-TW";
+  }
+  if (normalized.startsWith("ja")) return "ja";
+  if (normalized.startsWith("tr")) return "tr";
+  if (normalized.startsWith("en")) return "en";
+  return "zh";
+};
+
 // 「设置」放显示币种和模型定价（原「定价」页签并进来）
 type UsageTab = "logs" | "providers" | "models" | "settings";
 const TABS: UsageTab[] = ["logs", "providers", "models", "settings"];
@@ -171,6 +201,8 @@ interface UsageDashboardProps {
   onUsageDisplayChange?: (
     next: UsageDisplaySettings,
   ) => Promise<boolean> | boolean | void;
+  /** 设置里保存的界面语言：本页选择优先于它，离开页面时还原成它 */
+  settingsLanguage?: string;
 }
 
 /**
@@ -186,6 +218,7 @@ export function UsageDashboard({
   onOpenRoutingSettings,
   usageDisplay,
   onUsageDisplayChange,
+  settingsLanguage,
 }: UsageDashboardProps = {}) {
   const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
@@ -208,6 +241,46 @@ export function UsageDashboard({
   );
   const [model, setModel] = useState<string | undefined>(undefined);
   const [statusCode, setStatusCode] = useState<number | undefined>(undefined);
+
+  // 本页界面语言：优先于「设置 → 界面语言」。进页面套用本页记下的语言，
+  // 离开页面还原成设置里的语言；本页的选择只记在本机，不写回 settings.json。
+  const settingsLanguageRef = useRef<UsageLanguage>(
+    normalizeUsageLanguage(
+      settingsLanguage ?? i18n.resolvedLanguage ?? i18n.language,
+    ),
+  );
+  const [pageLanguage, setPageLanguage] = useRememberedChoice<UsageLanguage>(
+    USAGE_CHOICE_KEYS.language,
+    USAGE_LANGUAGES,
+    settingsLanguageRef.current,
+  );
+
+  // 本页选的语言立即生效；设置读出来后校正「要还原成的语言」并再套一次本页语言
+  // （启动时 syncLanguageFromSettings 可能比本页挂载晚，会先把语言拉回设置值）
+  useEffect(() => {
+    if (settingsLanguage) {
+      settingsLanguageRef.current = normalizeUsageLanguage(settingsLanguage);
+    }
+    const current = normalizeUsageLanguage(
+      i18n.resolvedLanguage || i18n.language,
+    );
+    if (current !== pageLanguage) {
+      void i18n.changeLanguage(pageLanguage);
+    }
+  }, [i18n, pageLanguage, settingsLanguage]);
+
+  // 离开本页时把界面语言还给「设置」里的值（本页选择不带走）
+  useEffect(() => {
+    return () => {
+      const settings = settingsLanguageRef.current;
+      const current = normalizeUsageLanguage(
+        i18n.resolvedLanguage || i18n.language,
+      );
+      if (current !== settings) {
+        void i18n.changeLanguage(settings);
+      }
+    };
+  }, [i18n]);
 
   // 请求日志显示哪些列在「设置」页签里改，这里只按设置画
   const logColumns = resolveRequestLogColumns(usageDisplay?.requestLogColumns);
@@ -572,6 +645,39 @@ export function UsageDashboard({
         ))}
       </div>
       <div className="min-w-2 flex-1" />
+      {/* 本页界面语言：优先于「设置 → 界面语言」，离开页面恢复设置值 */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            type="button"
+            variant="neutral"
+            size="regular"
+            className="min-w-[72px] max-w-[132px] shrink gap-1 pe-2 ps-3"
+            title={t("settings.language")}
+          >
+            <span className="min-w-0 truncate">
+              {t(USAGE_LANGUAGE_LABEL_KEYS[pageLanguage])}
+            </span>
+            <ChevronDown className="h-3.5 w-3.5 shrink-0 text-fg-2" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="end"
+          aria-label={t("settings.language")}
+          className={menuContentClass}
+        >
+          {USAGE_LANGUAGES.map((language) => (
+            <DropdownMenuItem
+              key={language}
+              className={menuItemClass}
+              onSelect={() => setPageLanguage(language)}
+            >
+              <MenuCheck checked={pageLanguage === language} />
+              {t(USAGE_LANGUAGE_LABEL_KEYS[language])}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button

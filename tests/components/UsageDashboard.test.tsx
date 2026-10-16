@@ -22,6 +22,16 @@ const usageApiMock = vi.hoisted(() => ({
   rebuildCodexUsage: vi.fn(),
 }));
 
+// 假 i18n：语言可切换（记调用、更新状态），供「本页界面语言」用
+const i18nMock = vi.hoisted(() => {
+  const state = { language: "en" };
+  const changeLanguage = vi.fn((language: string) => {
+    state.language = language;
+    return Promise.resolve();
+  });
+  return { state, changeLanguage };
+});
+
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, options?: unknown) => {
@@ -35,8 +45,13 @@ vi.mock("react-i18next", () => ({
       return key;
     },
     i18n: {
-      resolvedLanguage: "en",
-      language: "en",
+      get resolvedLanguage() {
+        return i18nMock.state.language;
+      },
+      get language() {
+        return i18nMock.state.language;
+      },
+      changeLanguage: i18nMock.changeLanguage,
     },
   }),
 }));
@@ -163,6 +178,10 @@ const renderDashboard = (props: ComponentProps<typeof UsageDashboard> = {}) => {
 describe("UsageDashboard", () => {
   beforeEach(() => {
     resetUsageSyncClockForTests();
+    // 每个用例从干净的存储和语言开始（否则上一个用例记下的页签 / 语言会串味）
+    localStorage.clear();
+    i18nMock.state.language = "en";
+    i18nMock.changeLanguage.mockClear();
     useProviderStatsMock.mockReset();
     useModelStatsMock.mockReset();
     useSummaryByAppMock.mockReset();
@@ -339,6 +358,79 @@ describe("UsageDashboard", () => {
       expect(usageHeroMock).toHaveBeenLastCalledWith(
         expect.objectContaining({ providerName: "DeepSeek" }),
       ),
+    );
+  });
+
+  it("switches the interface language on this page and restores the setting on leave", async () => {
+    const user = userEvent.setup();
+    const { unmount } = renderDashboard();
+
+    // 没选过时跟随设置里的界面语言（en），所以不该动 i18n
+    expect(
+      screen.getByRole("button", {
+        name: "settings.languageOptionEnglish",
+      }),
+    ).toBeInTheDocument();
+    expect(i18nMock.changeLanguage).not.toHaveBeenCalled();
+
+    await user.click(
+      screen.getByRole("button", { name: "settings.languageOptionEnglish" }),
+    );
+    await user.click(
+      await screen.findByRole("menuitem", {
+        name: "settings.languageOptionJapanese",
+      }),
+    );
+
+    // 本页立即切成日文，并只记在本机
+    await waitFor(() =>
+      expect(i18nMock.changeLanguage).toHaveBeenCalledWith("ja"),
+    );
+    expect(localStorage.getItem("cc-switch.usage.language")).toBe("ja");
+
+    // 离开页面：界面语言还给设置里的值
+    unmount();
+    await waitFor(() =>
+      expect(i18nMock.changeLanguage).toHaveBeenLastCalledWith("en"),
+    );
+  });
+
+  it("keeps this page's language ahead of the language saved in settings", async () => {
+    localStorage.setItem("cc-switch.usage.language", "ja");
+    i18nMock.state.language = "zh";
+
+    renderDashboard({ settingsLanguage: "zh" });
+
+    // 设置是 zh，本页记着 ja：本页说了算
+    await waitFor(() =>
+      expect(i18nMock.changeLanguage).toHaveBeenCalledWith("ja"),
+    );
+  });
+
+  it("re-applies this page's language once the saved setting arrives", async () => {
+    localStorage.setItem("cc-switch.usage.language", "ja");
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const ui = (settingsLanguage?: string) => (
+      <QueryClientProvider client={queryClient}>
+        <UsageDashboard settingsLanguage={settingsLanguage} />
+      </QueryClientProvider>
+    );
+
+    const view = render(ui(undefined));
+    await waitFor(() =>
+      expect(i18nMock.changeLanguage).toHaveBeenCalledWith("ja"),
+    );
+
+    // 启动时的设置同步把语言拉回 zh（本页挂载比它早）
+    act(() => {
+      i18nMock.state.language = "zh";
+    });
+    // 设置随后读到：本页语言再压过设置
+    view.rerender(ui("zh"));
+    await waitFor(() =>
+      expect(i18nMock.changeLanguage).toHaveBeenLastCalledWith("ja"),
     );
   });
 

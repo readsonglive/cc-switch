@@ -9,6 +9,7 @@ export const USAGE_CHOICE_KEYS = {
   range: "cc-switch.usage.rangePreset",
   trendMetric: "cc-switch.usage.trendMetric",
   heatmapMetric: "cc-switch.usage.heatmapMetric",
+  language: "cc-switch.usage.language",
 } as const;
 
 export function readRememberedChoice<T extends string>(

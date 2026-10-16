@@ -41,6 +41,7 @@ export function UsagePage({
       onOpenRoutingSettings={onOpenRoutingSettings}
       usageDisplay={settings?.usageDisplay}
       onUsageDisplayChange={(usageDisplay) => save({ usageDisplay })}
+      settingsLanguage={settings?.language}
     />
   );
 }
