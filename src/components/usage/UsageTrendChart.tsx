@@ -16,7 +16,6 @@ import { useUsageTrends } from "@/lib/query/usage";
 import { Loader2 } from "lucide-react";
 import {
   fmtInt,
-  formatTokensCompact,
   getLocaleFromLanguage,
   parseFiniteNumber,
   resolveTrendChartType,
@@ -233,9 +232,7 @@ export function UsageTrendChart({
         : t("usage.trend.cost");
 
   const formatMetric = (value: unknown) =>
-    metric === "cost"
-      ? money(value, 4)
-      : formatTokensCompact(value, dateLocale);
+    metric === "cost" ? money(value, 4) : fmtInt(value, dateLocale);
   const formatYTick = (value: unknown) =>
     metric === "cost"
       ? moneyTick(value)
