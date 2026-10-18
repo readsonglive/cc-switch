@@ -2449,7 +2449,8 @@
       "providers": "Providers",
       "models": "Models",
       "pricing": "Pricing",
-      "settings": "Settings"
+      "settings": "Settings",
+      "global": "Rankings"
     },
     "sortedByRequests": "Sorted by requests",
     "app": "App",
@@ -2542,7 +2543,53 @@
       "cacheWrite": "Cache write"
     },
     "prevMonth": "Previous month",
-    "nextMonth": "Next month"
+    "nextMonth": "Next month",
+    "estimate": {
+      "title": "Estimated Price",
+      "pickModels": "Select models to compare",
+      "cheapest": "Cheapest",
+      "saves": "Save {{percent}}%",
+      "model": "Model",
+      "cost": "Est. Cost",
+      "noCachePrice": "Cache pricing not configured; cache tokens counted at 0",
+      "pickHint": "Select models to compare pricing",
+      "emptyPricing": "No pricing data. Configure in Settings first."
+    },
+    "insights": {
+      "label": "Personal Insights",
+      "freeShare": "Zero-cost Token Share",
+      "freeShareHelp": "Share of tokens from models with zero cost",
+      "priciestModel": "Most Expensive Model",
+      "priciestProvider": "Most Expensive Provider",
+      "weekOverWeek": "7d vs Prior 7d",
+      "weekOverWeekHelp": "Token usage: last 7d vs prior 7d",
+      "newModel": "New",
+      "noData": "—"
+    },
+    "global": {
+      "tabs": {
+        "global": "Rankings"
+      },
+      "period": "Period",
+      "periodWeek": "Week",
+      "periodMonth": "Month",
+      "asOf": "As of {{date}}",
+      "model": "Model",
+      "author": "Author",
+      "tokens": "Tokens",
+      "delta": "Change",
+      "new": "New",
+      "vendorShare": "Vendor Token Share",
+      "noKey": "OpenRouter API key not configured",
+      "noKeyHint": "Add your key in Settings or configure an OpenRouter provider.",
+      "unauthorized": "OpenRouter API key is invalid",
+      "apiError": "Failed to fetch rankings",
+      "fetchFailed": "Failed to fetch. Please retry.",
+      "settingsTitle": "OpenRouter API Key",
+      "settingsHint": "Enter your OpenRouter API key. Left blank to auto-detect from providers.",
+      "settingsFallback": "Auto-detected from configured OpenRouter provider if not set.",
+      "apiKeyPlaceholder": "sk-or-…"
+    }
   },
   "usageScript": {
     "title": "Configure Usage Query",

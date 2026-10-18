@@ -2449,7 +2449,8 @@
       "providers": "プロバイダー",
       "models": "モデル",
       "pricing": "料金",
-      "settings": "設定"
+      "settings": "設定",
+      "global": "ランキング"
     },
     "sortedByRequests": "リクエスト数順",
     "app": "アプリ",
@@ -2542,7 +2543,53 @@
       "cacheWrite": "キャッシュ書き込み"
     },
     "prevMonth": "前月",
-    "nextMonth": "翌月"
+    "nextMonth": "翌月",
+    "estimate": {
+      "title": "推定料金",
+      "pickModels": "比較するモデルを選択",
+      "cheapest": "最安",
+      "saves": "{{percent}}%節約",
+      "model": "モデル",
+      "cost": "推定料金",
+      "noCachePrice": "キャッシュ単価が未設定。キャッシュトークンは0として計算",
+      "pickHint": "比較するモデルを選択してください",
+      "emptyPricing": "設定でモデル料金を設定してください"
+    },
+    "insights": {
+      "label": "個人インサイト",
+      "freeShare": "無料トークンシェア",
+      "freeShareHelp": "費用0のモデルのトークンシェア（無料+価格未設定モデルを含む）",
+      "priciestModel": "最高コストモデル",
+      "priciestProvider": "最高コストプロバイダ",
+      "weekOverWeek": "過去7日 vs 前7日",
+      "weekOverWeekHelp": "トークン使用量：過去7日間 vs 前7日間",
+      "newModel": "新規",
+      "noData": "—"
+    },
+    "global": {
+      "tabs": {
+        "global": "ランキング"
+      },
+      "period": "期間",
+      "periodWeek": "週",
+      "periodMonth": "月",
+      "asOf": "基準日 {{date}}",
+      "model": "モデル",
+      "author": "作者",
+      "tokens": "トークン",
+      "delta": "増減",
+      "new": "新規",
+      "vendorShare": "ベンダー別トークンシェア",
+      "noKey": "OpenRouter APIキーが未設定",
+      "noKeyHint": "設定でAPIキーを入力するか、設定済みプロバイダから自動検出します。",
+      "unauthorized": "OpenRouter APIキーが無効",
+      "apiError": "ランキング取得に失敗",
+      "fetchFailed": "取得に失敗しました。再試行してください。",
+      "settingsTitle": "OpenRouter API Key",
+      "settingsHint": "APIキーを入力。未設定時は設定済みプロバイダから自動検出。",
+      "settingsFallback": "未設定時は設定済みプロバイダのキーを自動使用。",
+      "apiKeyPlaceholder": "sk-or-…"
+    }
   },
   "usageScript": {
     "title": "利用状況を設定",

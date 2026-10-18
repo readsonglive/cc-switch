@@ -484,6 +484,8 @@ export interface Settings {
   hermesConfigDir?: string;
   // 覆盖 Pi agent 配置目录（可选）
   piConfigDir?: string;
+  // OpenRouter 全网榜 API Key（留空则自动使用已配置的 OpenRouter 供应商的 Key）
+  openrouterApiKey?: string;
 
   // ===== 当前供应商 ID（设备级）=====
   // 当前 Claude 供应商 ID（优先于数据库 is_current）

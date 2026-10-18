@@ -2389,7 +2389,8 @@
       "providers": "Sağlayıcılar",
       "models": "Modeller",
       "pricing": "Fiyatlandırma",
-      "settings": "Ayarlar"
+      "settings": "Ayarlar",
+      "global": "Sıralamalar"
     },
     "sortedByRequests": "İsteklere göre sıralandı",
     "app": "Uygulama",
@@ -2475,7 +2476,53 @@
     "firstTokenHelp": "Yönlendirme hizmetinin isteği aldığı andan sağlayıcının çıktı üretmeye başladığı ana kadar geçen süre. ≈ işaretli değer, yönlendirme kapalıyken oturum günlüğü zamanlarından hesaplanır: önceki günlük satırının yazıldığı andan başladığı için istemcinin isteği hazırlama süresini de içerir ve daha yüksek görünür. Claude Code’da yalnızca yanıt düşünme ile başladığında; Codex’te yalnızca yeni günlüklerde ve yanıt bir araç çağrısıyla başlamadığında hesaplanabilir.",
     "firstTokenSumHelpTitle": "İlk token süresi nasıl hesaplanır?",
     "firstTokenSumHelp": "Yönlendirme hizmetinin isteği aldığı andan sağlayıcının çıktı üretmeye başladığı ana kadar geçen süre. Satır, isteklerin medyanını gösterir; böylece ara sıra yavaşlayan bir istek (kuyruk, soğuk başlangıç) değeri yükseltmez. Yalnızca yönlendirme hizmetinden geçen başarılı akış istekleri hesaba katılır; 30 günden eski ve günlük toplamlara dahil edilmiş istekler sayılmaz. ≈ işaretli değer oturum günlüklerinden türetilir (daha yüksek görünür ve yalnızca bazı isteklerde hesaplanabilir); yalnızca satırda yönlendirilmiş istek verisi yoksa gösterilir.",
-    "estimatedTimingTipWithFirstToken": "Yaklaşık {{duration}} sn · ilk token yaklaşık {{ttft}} sn (oturum günlüğü zamanlarından tahmin edildi)"
+    "estimatedTimingTipWithFirstToken": "Yaklaşık {{duration}} sn · ilk token yaklaşık {{ttft}} sn (oturum günlüğü zamanlarından tahmin edildi)",
+    "estimate": {
+      "title": "Tahmini Fiyat",
+      "pickModels": "Karşılaştırmak için modeller seçin",
+      "cheapest": "En ucuz",
+      "saves": "%{{percent}} tasarruf",
+      "model": "Model",
+      "cost": "Tahmini Maliyet",
+      "noCachePrice": "Önbellek birim fiyatı yapılandırılmamış; tokenlar 0 olarak hesaplanır",
+      "pickHint": "Karşılaştırmak için modeller seçin",
+      "emptyPricing": "Önce ayarlarda model fiyatlandırmasını yapılandırın"
+    },
+    "insights": {
+      "label": "Kişisel Görünürlük",
+      "freeShare": "Ücretsiz Token Oranı",
+      "freeShareHelp": "Maliyeti 0 olan modellerin token oranı",
+      "priciestModel": "En Pahalı Model",
+      "priciestProvider": "En Pahalı Sağlayıcı",
+      "weekOverWeek": "Son 7 Gün vs Önceki 7 Gün",
+      "weekOverWeekHelp": "Token kullanımı: son 7 gün vs önceki 7 gün",
+      "newModel": "Yeni",
+      "noData": "—"
+    },
+    "global": {
+      "tabs": {
+        "global": "Sıralamalar"
+      },
+      "period": "Dönem",
+      "periodWeek": "Hafta",
+      "periodMonth": "Ay",
+      "asOf": "{{date}} itibarıyla",
+      "model": "Model",
+      "author": "Yazar",
+      "tokens": "Token",
+      "delta": "Değişim",
+      "new": "Yeni",
+      "vendorShare": "Sağlayıcı Token Payı",
+      "noKey": "OpenRouter API anahtarı yapılandırılmamış",
+      "noKeyHint": "Ayarlar'da API anahtarını girin veya yapılandırılmış sağlayıcıdan otomatik algılayın.",
+      "unauthorized": "OpenRouter API anahtarı geçersiz",
+      "apiError": "Sıralamalar alınamadı",
+      "fetchFailed": "Alınamadı. Lütfen tekrar deneyin.",
+      "settingsTitle": "OpenRouter API Anahtarı",
+      "settingsHint": "API anahtarınızı girin. Boş bırakılırsa otomatik algılanır.",
+      "settingsFallback": "Boş bırakılırsa yapılandırılmış sağlayıcının anahtarı kullanılır.",
+      "apiKeyPlaceholder": "sk-or-…"
+    }
   },
   "usageScript": {
     "title": "Kullanım Sorgusunu Yapılandır",

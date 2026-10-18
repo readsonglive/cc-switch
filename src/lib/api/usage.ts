@@ -235,4 +235,10 @@ export const usageApi = {
   getDataSourceBreakdown: async (): Promise<DataSourceSummary[]> => {
     return invoke("get_usage_data_sources");
   },
+
+  getOpenRouterRankings: async (
+    period: "week" | "month",
+  ): Promise<import("@/types/usage").OpenRouterRankings> => {
+    return invoke("get_openrouter_rankings", { period });
+  },
 };

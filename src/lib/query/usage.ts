@@ -163,6 +163,8 @@ export const usageKeys = {
     [...usageKeys.all, "limits", providerId, appType] as const,
   script: (providerId: string, appType: string) =>
     [...usageKeys.all, providerId, appType] as const,
+  openrouterRankings: (period: string) =>
+    [...usageKeys.all, "openrouter-rankings", period] as const,
 };
 
 /** 把 UI 侧的 "all" 哨兵归一成 undefined（后端语义：不过滤）。 */
@@ -456,5 +458,14 @@ export function useDeleteModelPricing() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: usageKeys.all });
     },
+  });
+}
+
+export function useOpenRouterRankings(period: "week" | "month") {
+  return useQuery({
+    queryKey: usageKeys.openrouterRankings(period),
+    queryFn: () => usageApi.getOpenRouterRankings(period),
+    staleTime: 6 * 60 * 60 * 1000,
+    refetchInterval: false,
   });
 }

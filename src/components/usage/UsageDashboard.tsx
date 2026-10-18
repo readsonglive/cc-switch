@@ -53,6 +53,9 @@ import { PricingConfigPanel } from "./PricingConfigPanel";
 import { RequestDetailPanel } from "./RequestDetailPanel";
 import { UsageDataSourcesSheet } from "./UsageDataSourcesSheet";
 import { UsageDisplaySection } from "./UsageDisplaySection";
+import { PriceEstimatePanel } from "./PriceEstimatePanel";
+import { UsageInsights } from "./UsageInsights";
+import { GlobalRankingsPanel } from "./GlobalRankingsPanel";
 import { resolveRequestLogColumns } from "./requestLogColumns";
 import type { UsageDisplaySettings } from "@/types";
 import { UsageDateRangePicker } from "./UsageDateRangePicker";
@@ -112,8 +115,8 @@ const normalizeUsageLanguage = (
 };
 
 // 「设置」放显示币种和模型定价（原「定价」页签并进来）
-type UsageTab = "logs" | "providers" | "models" | "settings";
-const TABS: UsageTab[] = ["logs", "providers", "models", "settings"];
+type UsageTab = "logs" | "providers" | "models" | "global" | "settings";
+const TABS: UsageTab[] = ["logs", "providers", "models", "global", "settings"];
 /** 记住的时间范围只认预设：自定义的起止日期过几天就不是用户想看的了，选自定义时不改记下的预设 */
 const REMEMBERED_RANGE_PRESETS: UsageRangePreset[] = [
   "today",
@@ -786,6 +789,7 @@ export function UsageDashboard({
     logs: t("usage.requestLogs"),
     providers: t("usage.tabs.providers"),
     models: t("usage.tabs.models"),
+    global: t("usage.tabs.global"),
     settings: t("usage.tabs.settings"),
   };
   const statusLabel =
@@ -886,6 +890,7 @@ export function UsageDashboard({
             refreshIntervalMs={0}
           />
         )}
+        {tab === "global" && <GlobalRankingsPanel />}
         {tab === "settings" && (
           <div className="flex flex-col gap-5 pt-3">
             {onUsageDisplayChange && (
@@ -967,6 +972,20 @@ export function UsageDashboard({
           providerName={providerName}
           model={model}
           refreshIntervalMs={0}
+          compact={compact}
+        />
+        <PriceEstimatePanel
+          range={range}
+          appType={scopedAppType}
+          providerName={providerName}
+          model={model}
+          compact={compact}
+        />
+        <UsageInsights
+          range={range}
+          appType={scopedAppType}
+          providerName={providerName}
+          model={model}
           compact={compact}
         />
 

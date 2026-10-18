@@ -2449,7 +2449,8 @@
       "providers": "供应商",
       "models": "模型",
       "pricing": "定价",
-      "settings": "设置"
+      "settings": "设置",
+      "global": "全网榜"
     },
     "sortedByRequests": "按请求数排序",
     "app": "应用",
@@ -2542,7 +2543,53 @@
       "cacheWrite": "缓存写入"
     },
     "prevMonth": "上个月",
-    "nextMonth": "下个月"
+    "nextMonth": "下个月",
+    "estimate": {
+      "title": "估算价格",
+      "pickModels": "选择要对比的模型",
+      "cheapest": "最省",
+      "saves": "省 {{percent}}%",
+      "model": "模型",
+      "cost": "估算总价",
+      "noCachePrice": "该模型未配置缓存单价，缓存 token 按 0 计",
+      "pickHint": "先选择要对比的模型",
+      "emptyPricing": "请先在设置里配置模型定价"
+    },
+    "insights": {
+      "label": "个人洞察",
+      "freeShare": "零费用 Token 占比",
+      "freeShareHelp": "费用为 0 的模型 token 占比（含真免费和未配定价）",
+      "priciestModel": "最贵模型",
+      "priciestProvider": "最贵供应商",
+      "weekOverWeek": "近 7 日 vs 前 7 日",
+      "weekOverWeekHelp": "Token 用量：近 7 日 vs 前 7 日",
+      "newModel": "新增",
+      "noData": "—"
+    },
+    "global": {
+      "tabs": {
+        "global": "全网榜"
+      },
+      "period": "周期",
+      "periodWeek": "周",
+      "periodMonth": "月",
+      "asOf": "截止 {{date}}",
+      "model": "模型",
+      "author": "作者",
+      "tokens": "Token",
+      "delta": "环比",
+      "new": "新增",
+      "vendorShare": "厂商 Token 份额",
+      "noKey": "未配置 OpenRouter API Key",
+      "noKeyHint": "请在设置里填写 API Key 或配置已开启的 OpenRouter 供应商。",
+      "unauthorized": "OpenRouter API Key 无效",
+      "apiError": "拉取榜单失败",
+      "fetchFailed": "拉取失败，请重试。",
+      "settingsTitle": "OpenRouter API Key",
+      "settingsHint": "在此填写 API Key。留空时自动从已配置的供应商探测。",
+      "settingsFallback": "未填写时自动使用已配置的 OpenRouter 供应商 Key。",
+      "apiKeyPlaceholder": "sk-or-…"
+    }
   },
   "usageScript": {
     "title": "配置用量查询",
