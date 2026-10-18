@@ -4144,7 +4144,10 @@
       "stack": "Aggregation"
     },
     "needsAttention": "Needs attention",
-    "back": "Back"
+    "back": "Back",
+    "openReleases": "Open latest release on GitHub",
+    "latestVersion": "Latest",
+    "resizeSidebar": "Drag to resize the sidebar"
   },
   "appsPage": {
     "showInSidebar": "Show {{name}} in the sidebar",

@@ -28,7 +28,11 @@ import type { GlobalPage, SettingsSection, View } from "@/lib/navigation";
 import { isAppPage } from "@/lib/navigation";
 import { SkillsIcon } from "@/components/BrandIcons";
 import { useUpdate } from "@/contexts/UpdateContext";
-import { sidebarWidth, useSidebarCollapsed } from "@/hooks/useSidebarCollapsed";
+import {
+  SIDEBAR_MAX_WIDTH,
+  SIDEBAR_MIN_WIDTH,
+  useSidebarCollapsed,
+} from "@/hooks/useSidebarCollapsed";
 import { useMoneyFormat } from "@/hooks/useMoneyFormat";
 import { useSettingsQuery } from "@/lib/query";
 import {
@@ -45,6 +49,8 @@ import { HoverTip } from "@/components/ui/hover-tip";
 import { DRAG_REGION_ATTR, DRAG_REGION_STYLE, isMac } from "@/lib/platform";
 import { cn } from "@/lib/utils";
 import ccswitchLogo from "@/assets/icons/logo.svg";
+import { LanguageSelector } from "./LanguageSelector";
+import { VersionBadge } from "./VersionBadge";
 import { APP_DISPLAY_NAME, AppGlyph } from "./AppGlyph";
 
 const NO_DRAG = { WebkitAppRegion: "no-drag" } as React.CSSProperties;
@@ -75,7 +81,17 @@ type DirectoryProps = SidebarProps & { collapsed: boolean };
 export function Sidebar(props: SidebarProps) {
   const { t } = useTranslation();
   const navRef = useRef<HTMLElement>(null);
-  const { collapsed, toggle } = useSidebarCollapsed(navRef);
+  const {
+    collapsed,
+    toggle,
+    width,
+    resizing,
+    onResizeStart,
+    onResizeMove,
+    onResizeEnd,
+    onResizeKeyDown,
+    resetWidth,
+  } = useSidebarCollapsed(navRef);
   const { view } = props;
   const inSettings = view === "settings";
 
@@ -86,7 +102,7 @@ export function Sidebar(props: SidebarProps) {
       className={cn(
         "relative flex h-full shrink-0 flex-col overflow-hidden whitespace-nowrap border-e border-border bg-sidebar text-body text-fg-1",
       )}
-      style={{ width: sidebarWidth(collapsed) }}
+      style={{ width }}
     >
       <a
         href="#main-content"
@@ -94,6 +110,37 @@ export function Sidebar(props: SidebarProps) {
       >
         {t("nav.skipToContent")}
       </a>
+      {!collapsed && (
+        // 右边缘的拖拽把手：拖动改展开宽度，双击回到默认宽度，聚焦后方向键也能调。
+        // 它是 role=separator，不是按钮——拖拽 / 键盘都要能改值，所以不用 button。
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label={t("nav.resizeSidebar")}
+          aria-valuenow={width}
+          aria-valuemin={SIDEBAR_MIN_WIDTH}
+          aria-valuemax={SIDEBAR_MAX_WIDTH}
+          tabIndex={0}
+          title={t("nav.resizeSidebar")}
+          style={NO_DRAG}
+          className="group absolute inset-y-0 end-0 z-20 w-1.5 cursor-col-resize touch-none select-none outline-none"
+          onPointerDown={onResizeStart}
+          onPointerMove={onResizeMove}
+          onPointerUp={onResizeEnd}
+          onPointerCancel={onResizeEnd}
+          onKeyDown={onResizeKeyDown}
+          onDoubleClick={resetWidth}
+        >
+          <span
+            className={cn(
+              "absolute inset-y-0 end-0 w-px transition-colors",
+              resizing
+                ? "bg-action"
+                : "bg-transparent group-hover:bg-action group-focus-visible:bg-action",
+            )}
+          />
+        </div>
+      )}
       <SidebarTopBar collapsed={collapsed} onToggle={toggle} />
       {inSettings ? (
         <SettingsDirectory {...props} collapsed={collapsed} />
@@ -129,6 +176,26 @@ function SidebarTopBar({
     </HoverTip>
   );
 
+  // 顶栏右侧的小工具区：版本号（显示是否最新，点击开最新发布页）+ 语言选择
+  const topBarTools = (
+    <span className="flex min-w-0 shrink items-center gap-0.5" style={NO_DRAG}>
+      <VersionBadge />
+      <LanguageSelector />
+    </span>
+  );
+
+  // 展开时在品牌行下面单独挂一条工具行：这三样（版本号 + 状态 + 语言选择）挤进品牌那一行
+  // 会把「CC Switch」压成省略号（英文语言名比中文还宽），单独一行默认宽度就放得下。
+  const toolsRow = !collapsed && (
+    <div
+      className="flex h-7 shrink-0 items-center justify-end gap-0.5 px-2"
+      {...DRAG_REGION_ATTR}
+      style={DRAG_REGION_STYLE as React.CSSProperties}
+    >
+      {topBarTools}
+    </div>
+  );
+
   // macOS 展开：顶条只放红绿灯；下面一行贴近红绿灯放 logo + 名字，收起箭头放在这一行最右边
   if (!collapsed && isMac()) {
     return (
@@ -155,6 +222,7 @@ function SidebarTopBar({
           </span>
           {toggleButton}
         </div>
+        {toolsRow}
       </>
     );
   }
@@ -177,31 +245,34 @@ function SidebarTopBar({
   }
 
   return (
-    <div
-      className={cn(
-        "flex h-11 shrink-0 items-center gap-0.5 px-2",
-        collapsed ? "justify-center" : "justify-end",
-      )}
-      {...DRAG_REGION_ATTR}
-      style={DRAG_REGION_STYLE as React.CSSProperties}
-    >
-      {!collapsed && !isMac() && (
-        // 左上角品牌（Windows / Linux）：图标 + 名字。macOS 左上角留给红绿灯，不放。
-        // 图片不接收指针事件，拖它也是在拖窗口
-        <span className="pointer-events-none me-auto flex min-w-0 items-center gap-2 ps-1.5">
-          <img
-            src={ccswitchLogo}
-            alt=""
-            draggable={false}
-            className="h-[22px] w-[22px] shrink-0"
-          />
-          <span className="truncate text-strong font-semibold text-fg-1">
-            CC Switch
+    <>
+      <div
+        className={cn(
+          "flex h-11 shrink-0 items-center gap-0.5 px-2",
+          collapsed ? "justify-center" : "justify-end",
+        )}
+        {...DRAG_REGION_ATTR}
+        style={DRAG_REGION_STYLE as React.CSSProperties}
+      >
+        {!collapsed && !isMac() && (
+          // 左上角品牌（Windows / Linux）：图标 + 名字。macOS 左上角留给红绿灯，不放。
+          // 图片不接收指针事件，拖它也是在拖窗口
+          <span className="pointer-events-none me-auto flex min-w-0 items-center gap-2 ps-1.5">
+            <img
+              src={ccswitchLogo}
+              alt=""
+              draggable={false}
+              className="h-[22px] w-[22px] shrink-0"
+            />
+            <span className="truncate text-strong font-semibold text-fg-1">
+              CC Switch
+            </span>
           </span>
-        </span>
-      )}
-      {toggleButton}
-    </div>
+        )}
+        {toggleButton}
+      </div>
+      {toolsRow}
+    </>
   );
 }
 
@@ -479,7 +550,7 @@ function AppNavItem({
       onClick={onSelect}
       aria-current={selected ? "page" : undefined}
       className={cn(
-        "mx-2 flex h-7 w-[184px] shrink-0 items-center gap-2 rounded-control px-2 text-start transition-colors hover:bg-subtle",
+        "mx-2 flex h-7 w-[calc(100%-1rem)] shrink-0 items-center gap-2 rounded-control px-2 text-start transition-colors hover:bg-subtle",
         selected && "bg-selected font-medium hover:bg-selected",
       )}
     >
@@ -641,7 +712,7 @@ function NavItem({
         aria-current={selected ? "page" : undefined}
         className={cn(
           "flex h-7 shrink-0 items-center gap-2 rounded-control px-2 text-start transition-colors hover:bg-subtle",
-          compact ? "min-w-0 flex-1" : "mx-2 w-[184px]",
+          compact ? "min-w-0 flex-1" : "mx-2 w-[calc(100%-1rem)]",
           selected && "bg-selected font-medium hover:bg-selected",
         )}
       >
@@ -726,7 +797,7 @@ function SettingsDirectory({
         <button
           type="button"
           onClick={onExitSettings}
-          className="mx-2 flex h-7 w-[184px] shrink-0 items-center gap-2 rounded-control px-2 text-start text-fg-2 transition-colors hover:bg-subtle hover:text-fg-1"
+          className="mx-2 flex h-7 w-[calc(100%-1rem)] shrink-0 items-center gap-2 rounded-control px-2 text-start text-fg-2 transition-colors hover:bg-subtle hover:text-fg-1"
         >
           <ArrowLeft className="h-4 w-4" strokeWidth={1.5} aria-hidden="true" />
           {t("nav.back")}

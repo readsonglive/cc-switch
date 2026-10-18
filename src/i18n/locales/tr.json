@@ -4076,7 +4076,10 @@
       "mappingFull": "Model eşleme"
     },
     "needsAttention": "Dikkat edilmesi gerekiyor",
-    "back": "Geri"
+    "back": "Geri",
+    "openReleases": "GitHub'da son sürümü aç",
+    "latestVersion": "Güncel",
+    "resizeSidebar": "Kenar çubuğu genişliğini sürükleyerek ayarla"
   },
   "appsPage": {
     "showInSidebar": "Kenar çubuğunda {{name}}'yi göster",

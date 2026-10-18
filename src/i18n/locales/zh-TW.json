@@ -4145,7 +4145,10 @@
       "stack": "聚合"
     },
     "needsAttention": "需要處理",
-    "back": "返回"
+    "back": "返回",
+    "openReleases": "查看 GitHub 最新發布",
+    "latestVersion": "最新版",
+    "resizeSidebar": "拖曳調整側欄寬度"
   },
   "appsPage": {
     "showInSidebar": "在側欄顯示 {{name}}",

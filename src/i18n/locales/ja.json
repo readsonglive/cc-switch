@@ -4144,7 +4144,10 @@
       "stack": "集約"
     },
     "needsAttention": "対応が必要",
-    "back": "戻る"
+    "back": "戻る",
+    "openReleases": "GitHub で最新リリースを開く",
+    "latestVersion": "最新版",
+    "resizeSidebar": "ドラッグしてサイドバーの幅を変更"
   },
   "appsPage": {
     "showInSidebar": "{{name}} をサイドバーに表示",

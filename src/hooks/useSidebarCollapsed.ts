@@ -4,6 +4,8 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
   type RefObject,
 } from "react";
 import { isMac } from "@/lib/platform";
@@ -14,11 +16,47 @@ export const SIDEBAR_AUTO_COLLAPSE_WIDTH = 960;
 const STORAGE_KEY = "cc-switch-sidebar-collapsed";
 
 export const SIDEBAR_EXPANDED_WIDTH = 200;
+/** 展开宽度的可调范围：窄于下限，顶栏那条工具行（版本号 + 语言选择）就放不开；宽于上限内容区太挤。 */
+export const SIDEBAR_MIN_WIDTH = 200;
+export const SIDEBAR_MAX_WIDTH = 420;
+/** 用户拖出来的展开宽度；收起时的图标轨宽度固定，不受它影响。 */
+export const SIDEBAR_WIDTH_STORAGE_KEY = "cc-switch-sidebar-width";
 /** 收起时的图标轨宽度：macOS 的红绿灯（新版更大）要约 74px，Mac 上放宽到 84 */
 export const sidebarRailWidth = () => (isMac() ? 84 : 72);
 
+export const clampSidebarWidth = (value: number): number =>
+  Math.min(SIDEBAR_MAX_WIDTH, Math.max(SIDEBAR_MIN_WIDTH, Math.round(value)));
+
+/** 读用户拖出来的展开宽度；没存过、或存的值坏了，就用默认值。 */
+export function readStoredSidebarWidth(): number {
+  try {
+    const saved = localStorage.getItem(SIDEBAR_WIDTH_STORAGE_KEY);
+    if (!saved) return SIDEBAR_EXPANDED_WIDTH;
+    const parsed = Number(saved);
+    return Number.isFinite(parsed)
+      ? clampSidebarWidth(parsed)
+      : SIDEBAR_EXPANDED_WIDTH;
+  } catch {
+    return SIDEBAR_EXPANDED_WIDTH;
+  }
+}
+
+/** 只在拖完 / 键盘调整完时写：拖动过程中每一帧都写 localStorage 会卡手。 */
+function writeStoredSidebarWidth(width: number) {
+  try {
+    localStorage.setItem(
+      SIDEBAR_WIDTH_STORAGE_KEY,
+      String(clampSidebarWidth(width)),
+    );
+  } catch {
+    // 记不住也不影响这次调整
+  }
+}
+
 const TOGGLE_DURATION_MS = 200;
 const TOGGLE_EASING = "cubic-bezier(0.2, 0, 0, 1)";
+/** 聚焦把手后按方向键每次调的宽度 */
+const RESIZE_KEY_STEP = 12;
 let running: {
   animation: Animation;
   cover: HTMLElement;
@@ -100,8 +138,10 @@ function animateToggle(nav: HTMLElement, fromWidth: number, toWidth: number) {
   animation.oncancel = cleanup;
 }
 
-export const sidebarWidth = (collapsed: boolean) =>
-  collapsed ? sidebarRailWidth() : SIDEBAR_EXPANDED_WIDTH;
+export const sidebarWidth = (
+  collapsed: boolean,
+  expandedWidth: number = SIDEBAR_EXPANDED_WIDTH,
+) => (collapsed ? sidebarRailWidth() : expandedWidth);
 
 function readManualPreference(): boolean | null {
   try {
@@ -123,11 +163,18 @@ function isNarrowWindow(): boolean {
 
 /**
  * 侧栏展开 / 收起：默认跟随窗口宽度（< 960 收起），⌘\ 或按钮手动切换后记住手动的选择。
+ * 同时管展开宽度（拖右边缘 / 方向键调整，写 localStorage）。
  * 只在 Sidebar 里用：状态放在 App 的话，每次切换都会把整页重渲染一遍，动画第一帧就掉帧。
  */
 export function useSidebarCollapsed(navRef: RefObject<HTMLElement | null>) {
   const [manual, setManual] = useState<boolean | null>(readManualPreference);
   const [narrow, setNarrow] = useState(isNarrowWindow);
+  const [expandedWidth, setExpandedWidth] = useState<number>(
+    readStoredSidebarWidth,
+  );
+  const [resizing, setResizing] = useState(false);
+  // 拖动时每帧都要拿最新宽度（松手才落盘、开合动画要读目标宽度），等 state 回读会晚一帧，所以再放一份 ref
+  const expandedWidthRef = useRef(expandedWidth);
 
   useEffect(() => {
     const onResize = () => setNarrow(isNarrowWindow());
@@ -136,6 +183,7 @@ export function useSidebarCollapsed(navRef: RefObject<HTMLElement | null>) {
   }, []);
 
   const collapsed = manual ?? narrow;
+  const width = sidebarWidth(collapsed, expandedWidth);
   // 只有手动切换才滑；拖窗口自动收起时直接到位
   const animateFrom = useRef<number | null>(null);
 
@@ -143,13 +191,18 @@ export function useSidebarCollapsed(navRef: RefObject<HTMLElement | null>) {
     const from = animateFrom.current;
     animateFrom.current = null;
     if (from !== null && navRef.current) {
-      animateToggle(navRef.current, from, sidebarWidth(collapsed));
+      animateToggle(
+        navRef.current,
+        from,
+        sidebarWidth(collapsed, expandedWidthRef.current),
+      );
     }
+    // 拖宽度不走这条：宽度动画只在手动开合时放，拖动要跟手
   }, [collapsed, navRef]);
 
   const toggle = useCallback(() => {
     const next = !collapsed;
-    animateFrom.current = sidebarWidth(collapsed);
+    animateFrom.current = sidebarWidth(collapsed, expandedWidthRef.current);
     setManual(next);
     try {
       localStorage.setItem(STORAGE_KEY, String(next));
@@ -169,5 +222,119 @@ export function useSidebarCollapsed(navRef: RefObject<HTMLElement | null>) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [toggle]);
 
-  return { collapsed, toggle };
+  const applyWidth = useCallback((next: number) => {
+    const clamped = clampSidebarWidth(next);
+    expandedWidthRef.current = clamped;
+    setExpandedWidth(clamped);
+  }, []);
+
+  const commitWidth = useCallback(() => {
+    writeStoredSidebarWidth(expandedWidthRef.current);
+  }, []);
+
+  const drag = useRef<{
+    pointerId: number;
+    startX: number;
+    startWidth: number;
+  } | null>(null);
+
+  const onResizeStart = useCallback(
+    (event: ReactPointerEvent<HTMLElement>) => {
+      if (collapsed || event.button !== 0) return;
+      // 抓住指针：指针滑出那条几像素宽的把手也还能收到 move / up
+      event.currentTarget.setPointerCapture(event.pointerId);
+      drag.current = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startWidth: expandedWidthRef.current,
+      };
+      setResizing(true);
+      // 这里故意不 preventDefault：点一下也要能把焦点给把手，键盘用户才知道能按方向键调
+      // （拖拽时不会选中文字，靠 CSS 的 select-none + 下面的 body user-select）
+    },
+    [collapsed],
+  );
+
+  const onResizeMove = useCallback(
+    (event: ReactPointerEvent<HTMLElement>) => {
+      const current = drag.current;
+      if (!current || current.pointerId !== event.pointerId) return;
+      event.preventDefault();
+      // 侧栏在左边，指针往右移就是变宽；本应用没有 RTL 界面语言，不用反号
+      applyWidth(current.startWidth + (event.clientX - current.startX));
+    },
+    [applyWidth],
+  );
+
+  const onResizeEnd = useCallback(
+    (event: ReactPointerEvent<HTMLElement>) => {
+      const current = drag.current;
+      if (!current || current.pointerId !== event.pointerId) return;
+      drag.current = null;
+      setResizing(false);
+      commitWidth();
+    },
+    [commitWidth],
+  );
+
+  const resetWidth = useCallback(() => {
+    applyWidth(SIDEBAR_EXPANDED_WIDTH);
+    commitWidth();
+  }, [applyWidth, commitWidth]);
+
+  const onResizeKeyDown = useCallback(
+    (event: ReactKeyboardEvent<HTMLElement>) => {
+      if (collapsed) return;
+      let next: number | null = null;
+      if (event.key === "ArrowLeft") {
+        next = expandedWidthRef.current - RESIZE_KEY_STEP;
+      } else if (event.key === "ArrowRight") {
+        next = expandedWidthRef.current + RESIZE_KEY_STEP;
+      } else if (event.key === "Home") {
+        next = SIDEBAR_MIN_WIDTH;
+      } else if (event.key === "End") {
+        next = SIDEBAR_MAX_WIDTH;
+      } else if (event.key === "Enter" || event.key === " ") {
+        next = SIDEBAR_EXPANDED_WIDTH;
+      }
+      if (next === null) return;
+      event.preventDefault();
+      applyWidth(next);
+      commitWidth();
+    },
+    [applyWidth, collapsed, commitWidth],
+  );
+
+  // 收起时把手会被卸载，拖到一半就收起当成松手
+  useEffect(() => {
+    if (!collapsed) return;
+    drag.current = null;
+    setResizing(false);
+  }, [collapsed]);
+
+  // 拖动时整页保持 col-resize 光标，也别把指针扫过的文字选中
+  useEffect(() => {
+    if (!resizing) return;
+    const body = document.body.style;
+    const previousUserSelect = body.userSelect;
+    const previousCursor = body.cursor;
+    body.userSelect = "none";
+    body.cursor = "col-resize";
+    return () => {
+      body.userSelect = previousUserSelect;
+      body.cursor = previousCursor;
+    };
+  }, [resizing]);
+
+  return {
+    collapsed,
+    toggle,
+    width,
+    resizing,
+    onResizeStart,
+    onResizeMove,
+    onResizeEnd,
+    onResizeKeyDown,
+    resetWidth,
+  };
 }
