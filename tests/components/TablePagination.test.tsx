@@ -86,3 +86,58 @@ describe("useClientPagination + TablePagination", () => {
     expect(screen.getByText("/ 2")).toBeInTheDocument();
   });
 });
+
+// 注意：测试环境的 i18n 资源是空的（tests/setupTests.ts 里 resources 只有空对象），
+// t("usage.firstPage") 会原样返回 key，所以断言的是 **i18n key**，不是中文。
+describe("TablePagination 首页 / 尾页", () => {
+  it("单页时不显示首页/尾页按钮", () => {
+    render(
+      <TablePagination
+        page={0}
+        totalPages={1}
+        total={3}
+        onPageChange={() => {}}
+      />,
+    );
+    expect(screen.queryByLabelText("usage.firstPage")).toBeNull();
+    expect(screen.queryByLabelText("usage.lastPage")).toBeNull();
+  });
+
+  it("多页时首页跳到第 1 页、尾页跳到最后一页", async () => {
+    const onPageChange = vi.fn();
+    render(
+      <TablePagination
+        page={1}
+        totalPages={5}
+        total={90}
+        onPageChange={onPageChange}
+      />,
+    );
+    await userEvent.click(screen.getByLabelText("usage.firstPage"));
+    expect(onPageChange).toHaveBeenCalledWith(0);
+    onPageChange.mockClear();
+    await userEvent.click(screen.getByLabelText("usage.lastPage"));
+    expect(onPageChange).toHaveBeenCalledWith(4);
+  });
+
+  it("已在首/尾页时对应按钮禁用", () => {
+    const { rerender } = render(
+      <TablePagination
+        page={0}
+        totalPages={3}
+        total={50}
+        onPageChange={() => {}}
+      />,
+    );
+    expect(screen.getByLabelText("usage.firstPage")).toBeDisabled();
+    rerender(
+      <TablePagination
+        page={2}
+        totalPages={3}
+        total={50}
+        onPageChange={() => {}}
+      />,
+    );
+    expect(screen.getByLabelText("usage.lastPage")).toBeDisabled();
+  });
+});

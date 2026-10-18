@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 import { HoverTip } from "@/components/ui/hover-tip";
 import { fmtInt, getLocaleFromLanguage } from "./format";
 
@@ -48,17 +53,32 @@ export function TablePagination({
     <div className="flex h-10 items-center gap-2 text-caption text-fg-3">
       <span className="tabular-nums">{t("usage.totalRecords", { total })}</span>
       <div className="flex-1" />
-      <HoverTip content={t("usage.prevPage")}>
-        <button
-          type="button"
-          className={NAV_BUTTON}
-          aria-label={t("usage.prevPage")}
-          disabled={page === 0}
-          onClick={() => onPageChange(Math.max(0, page - 1))}
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-      </HoverTip>
+      {totalPages > 1 && (
+        <HoverTip content={t("usage.firstPage")}>
+          <button
+            type="button"
+            className={NAV_BUTTON}
+            aria-label={t("usage.firstPage")}
+            disabled={page === 0}
+            onClick={() => onPageChange(0)}
+          >
+            <ChevronsLeft className="h-4 w-4" />
+          </button>
+        </HoverTip>
+      )}
+      {totalPages > 1 && (
+        <HoverTip content={t("usage.prevPage")}>
+          <button
+            type="button"
+            className={NAV_BUTTON}
+            aria-label={t("usage.prevPage")}
+            disabled={page === 0}
+            onClick={() => onPageChange(Math.max(0, page - 1))}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+        </HoverTip>
+      )}
       <span className="flex items-center gap-1 tabular-nums text-fg-2">
         <input
           type="text"
@@ -87,6 +107,19 @@ export function TablePagination({
           <ChevronRight className="h-4 w-4" />
         </button>
       </HoverTip>
+      {totalPages > 1 && (
+        <HoverTip content={t("usage.lastPage")}>
+          <button
+            type="button"
+            className={NAV_BUTTON}
+            aria-label={t("usage.lastPage")}
+            disabled={page >= totalPages - 1}
+            onClick={() => onPageChange(totalPages - 1)}
+          >
+            <ChevronsRight className="h-4 w-4" />
+          </button>
+        </HoverTip>
+      )}
     </div>
   );
 }
