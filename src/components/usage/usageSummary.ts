@@ -37,12 +37,15 @@ export function aggregateSummaries(items: UsageSummary[]): UsageSummary {
 /**
  * 在 app-type 列表里挑「跟当前 provider/model 最匹配的那条」。
  * 上游 `useUsageSummaryByApp` 会按 app 聚合，可能有 0/1/N 行；找
- * `appType` 相同的最优先，否则选第一条兜底。
+ * `appType` 相同的最优先，否则聚合所有 app。
  */
 export function pickSummary(
   apps: UsageSummaryByApp[],
-  _appType: string | undefined,
+  appType: string | undefined,
 ): UsageSummary | undefined {
   if (apps.length === 0) return undefined;
-  return apps[0].summary;
+  if (appType) {
+    return apps.find((a) => a.appType === appType)?.summary;
+  }
+  return aggregateSummaries(apps.map((a) => a.summary));
 }

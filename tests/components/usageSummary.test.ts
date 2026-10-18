@@ -3,59 +3,66 @@ import {
   aggregateSummaries,
   pickSummary,
 } from "@/components/usage/usageSummary";
-import type { UsageSummary } from "@/types/usage";
+import type { UsageSummary, UsageSummaryByApp } from "@/types/usage";
 
-const summary = (over: Partial<UsageSummary> = {}): UsageSummary => ({
+const A: UsageSummary = {
   totalRequests: 10,
-  totalCost: "0.1",
-  totalInputTokens: 600_000,
-  totalOutputTokens: 400_000,
-  totalCacheCreationTokens: 100_000,
-  totalCacheReadTokens: 200_000,
-  successRate: 99,
-  realTotalTokens: 1_300_000,
-  cacheHitRate: 200_000 / 1_300_000,
-  ...over,
+  totalCost: "1.5",
+  totalInputTokens: 100,
+  totalOutputTokens: 50,
+  totalCacheCreationTokens: 20,
+  totalCacheReadTokens: 30,
+  successRate: 90,
+  realTotalTokens: 200,
+  cacheHitRate: 0.2,
+};
+const B: UsageSummary = {
+  totalRequests: 30,
+  totalCost: "2.5",
+  totalInputTokens: 300,
+  totalOutputTokens: 100,
+  totalCacheCreationTokens: 0,
+  totalCacheReadTokens: 200,
+  successRate: 100,
+  realTotalTokens: 600,
+  cacheHitRate: 0.4,
+};
+const apps: UsageSummaryByApp[] = [
+  { appType: "claude", summary: A },
+  { appType: "codex", summary: B },
+];
+
+it("不传 appType 时把各应用逐项相加", () => {
+  const r = pickSummary(apps, undefined)!;
+  expect(r.totalRequests).toBe(40);
+  expect(r.totalInputTokens).toBe(400);
+  expect(r.totalOutputTokens).toBe(150);
+  expect(r.totalCacheCreationTokens).toBe(20);
+  expect(r.totalCacheReadTokens).toBe(230);
+  expect(r.realTotalTokens).toBe(800);
+  expect(r.totalCost).toBe("4.000000");
 });
 
-describe("aggregateSummaries", () => {
-  it("多项求和", () => {
-    const a = summary({ totalInputTokens: 100, totalOutputTokens: 50 });
-    const b = summary({ totalInputTokens: 200, totalOutputTokens: 100 });
-    const r = aggregateSummaries([a, b]);
-    expect(r.totalInputTokens).toBe(300);
-    expect(r.totalOutputTokens).toBe(150);
-  });
-
-  it("空输入返回零化 summary", () => {
-    const r = aggregateSummaries([]);
-    expect(r).toMatchObject({
-      totalRequests: 0,
-      totalCost: "0.000000",
-      totalInputTokens: 0,
-      totalOutputTokens: 0,
-      cacheHitRate: 0,
-    });
-  });
+it("successRate / cacheHitRate 按求和后重算，而不是跨行取平均", () => {
+  const r = pickSummary(apps, undefined)!;
+  // (10*0.9 + 30*1.0) / 40 * 100 = 97.5
+  expect(r.successRate).toBeCloseTo(97.5, 10);
+  // cacheHitRate = 230 / (400 + 20 + 230) = 230/650
+  expect(r.cacheHitRate).toBeCloseTo(230 / 650, 10);
 });
 
-describe("pickSummary", () => {
-  it("单条目直接返回", () => {
-    const s = summary();
-    expect(pickSummary([{ appType: "app1", summary: s }], "app1")).toBe(s);
-  });
+it("传 appType 时只取该应用，不做合并", () => {
+  expect(pickSummary(apps, "codex")).toBe(B);
+});
 
-  it("多条目取第一条（上游已聚合）", () => {
-    const a = summary();
-    const b = summary();
-    expect(
-      pickSummary(
-        [
-          { appType: "a", summary: a },
-          { appType: "b", summary: b },
-        ],
-        "any",
-      ),
-    ).toBe(a);
-  });
+it("appType 无匹配 / 空数组时返回 undefined", () => {
+  expect(pickSummary(apps, "nope")).toBeUndefined();
+  expect(pickSummary([], undefined)).toBeUndefined();
+});
+
+it("aggregateSummaries 空数组时不产生 NaN", () => {
+  const r = aggregateSummaries([]);
+  expect(r.totalRequests).toBe(0);
+  expect(r.successRate).toBe(0);
+  expect(r.cacheHitRate).toBe(0);
 });

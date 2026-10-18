@@ -17,7 +17,6 @@ import {
   getCacheWriteAvailability,
   type UsageRangeSelection,
   type UsageSummary,
-  type UsageSummaryByApp,
 } from "@/types/usage";
 import { useMoneyFormat } from "@/hooks/useMoneyFormat";
 
@@ -39,49 +38,7 @@ interface UsageHeroProps {
  * `cacheHitRate` and `successRate` must be re-derived from the summed counts
  * rather than averaged across rows.
  */
-export function aggregateSummaries(items: UsageSummary[]): UsageSummary {
-  let totalRequests = 0;
-  let successCount = 0;
-  let totalCostNum = 0;
-  let input = 0;
-  let output = 0;
-  let cacheCreation = 0;
-  let cacheRead = 0;
-
-  for (const s of items) {
-    totalRequests += s.totalRequests;
-    successCount += Math.round((s.totalRequests * s.successRate) / 100);
-    totalCostNum += parseFiniteNumber(s.totalCost) ?? 0;
-    input += s.totalInputTokens;
-    output += s.totalOutputTokens;
-    cacheCreation += s.totalCacheCreationTokens;
-    cacheRead += s.totalCacheReadTokens;
-  }
-
-  const cacheableInput = input + cacheCreation + cacheRead;
-  return {
-    totalRequests,
-    totalCost: totalCostNum.toFixed(6),
-    totalInputTokens: input,
-    totalOutputTokens: output,
-    totalCacheCreationTokens: cacheCreation,
-    totalCacheReadTokens: cacheRead,
-    successRate: totalRequests > 0 ? (successCount / totalRequests) * 100 : 0,
-    realTotalTokens: input + output + cacheCreation + cacheRead,
-    cacheHitRate: cacheableInput > 0 ? cacheRead / cacheableInput : 0,
-  };
-}
-
-function pickSummary(
-  apps: UsageSummaryByApp[],
-  appType: string | undefined,
-): UsageSummary | undefined {
-  if (apps.length === 0) return undefined;
-  if (appType) {
-    return apps.find((a) => a.appType === appType)?.summary;
-  }
-  return aggregateSummaries(apps.map((a) => a.summary));
-}
+import { aggregateSummaries, pickSummary } from "./usageSummary";
 
 function MetricCard({
   label,
