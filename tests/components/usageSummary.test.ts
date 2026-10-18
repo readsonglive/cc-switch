@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  aggregateSummaries,
-  pickSummary,
-} from "@/components/usage/usageSummary";
+import { aggregateSummaries, pickSummary } from "@/components/usage/usageSummary";
 import type { UsageSummary, UsageSummaryByApp } from "@/types/usage";
 
 const A: UsageSummary = {

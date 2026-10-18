@@ -16,7 +16,6 @@ import {
 import {
   getCacheWriteAvailability,
   type UsageRangeSelection,
-  type UsageSummary,
 } from "@/types/usage";
 import { useMoneyFormat } from "@/hooks/useMoneyFormat";
 
@@ -38,7 +37,7 @@ interface UsageHeroProps {
  * `cacheHitRate` and `successRate` must be re-derived from the summed counts
  * rather than averaged across rows.
  */
-import { aggregateSummaries, pickSummary } from "./usageSummary";
+import { pickSummary } from "./usageSummary";
 
 function MetricCard({
   label,

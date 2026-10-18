@@ -355,3 +355,16 @@ export interface StatsFilters {
   providerId?: string;
   appType?: string;
 }
+
+export interface OpenRouterRankingRow {
+  date: string;
+  model: string;
+  totalTokens: number;
+}
+
+export interface OpenRouterRankings {
+  status: "ok" | "no_key" | "unauthorized" | "api_error";
+  message?: string;
+  asOf?: string;
+  rows: OpenRouterRankingRow[];
+}
