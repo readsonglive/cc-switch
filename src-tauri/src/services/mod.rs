@@ -10,6 +10,8 @@ pub mod mcp;
 pub mod model_fetch;
 pub mod model_pricing;
 pub mod omo;
+pub mod openrouter_rankings;
+pub use openrouter_rankings::*;
 pub mod pi_prompt_files;
 pub(crate) mod pi_state;
 pub mod profile;

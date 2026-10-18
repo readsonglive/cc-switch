@@ -1823,6 +1823,7 @@ pub fn run() {
             commands::enter_lightweight_mode,
             commands::exit_lightweight_mode,
             commands::is_lightweight_mode,
+            commands::get_openrouter_rankings,
         ]);
 
     let app = builder

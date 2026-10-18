@@ -548,7 +548,10 @@ pub async fn queryProviderUsage(
 
 /// Resolve `(base_url, api_key)` for native usage queries, delegating to the
 /// per-app resolver on `Provider`. Missing provider → empty credentials.
-fn resolve_native_credentials(app_type: &AppType, provider: Option<&Provider>) -> (String, String) {
+pub(crate) fn resolve_native_credentials(
+    app_type: &AppType,
+    provider: Option<&Provider>,
+) -> (String, String) {
     provider
         .map(|p| p.resolve_usage_credentials(app_type))
         .unwrap_or_default()

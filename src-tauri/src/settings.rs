@@ -527,6 +527,10 @@ pub struct AppSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pi_config_dir: Option<String>,
 
+    /// 全网榜（OpenRouter Data API）用；留空则自动使用已配置的 OpenRouter 供应商的 Key
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub openrouter_api_key: Option<String>,
+
     // ===== 当前供应商 ID（设备级）=====
     /// 当前 Claude 供应商 ID（本地存储，优先于数据库 is_current）
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -657,6 +661,7 @@ impl Default for AppSettings {
             openclaw_config_dir: None,
             hermes_config_dir: None,
             pi_config_dir: None,
+            openrouter_api_key: None,
             current_provider_claude: None,
             current_provider_claude_desktop: None,
             current_provider_codex: None,
