@@ -974,13 +974,6 @@ export function UsageDashboard({
           refreshIntervalMs={0}
           compact={compact}
         />
-        <PriceEstimatePanel
-          range={range}
-          appType={scopedAppType}
-          providerName={providerName}
-          model={model}
-          compact={compact}
-        />
         <UsageInsights
           range={range}
           appType={scopedAppType}
@@ -1009,6 +1002,14 @@ export function UsageDashboard({
         )}
 
         {tabsSection}
+
+        <PriceEstimatePanel
+          range={range}
+          appType={scopedAppType}
+          providerName={providerName}
+          model={model}
+          compact={compact}
+        />
       </div>
     );
 
