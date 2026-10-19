@@ -908,6 +908,13 @@ export function UsageDashboard({
               </h3>
               <PricingConfigPanel />
             </section>
+            <PriceEstimatePanel
+              range={range}
+              appType={appType}
+              providerName={providerName}
+              model={model}
+              compact={compact}
+            />
           </div>
         )}
       </div>
@@ -1000,8 +1007,6 @@ export function UsageDashboard({
             refreshIntervalMs={0}
           />
         )}
-
-        {tabsSection}
 
         <PriceEstimatePanel
           range={range}
