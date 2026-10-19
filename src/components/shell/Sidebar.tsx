@@ -49,8 +49,7 @@ import { HoverTip } from "@/components/ui/hover-tip";
 import { DRAG_REGION_ATTR, DRAG_REGION_STYLE, isMac } from "@/lib/platform";
 import { cn } from "@/lib/utils";
 import ccswitchLogo from "@/assets/icons/logo.svg";
-import { LanguageSelector } from "./LanguageSelector";
-import { VersionBadge } from "./VersionBadge";
+
 import { APP_DISPLAY_NAME, AppGlyph } from "./AppGlyph";
 
 const NO_DRAG = { WebkitAppRegion: "no-drag" } as React.CSSProperties;
@@ -176,26 +175,6 @@ function SidebarTopBar({
     </HoverTip>
   );
 
-  // 顶栏右侧的小工具区：版本号（显示是否最新，点击开最新发布页）+ 语言选择
-  const topBarTools = (
-    <span className="flex min-w-0 shrink items-center gap-0.5" style={NO_DRAG}>
-      <VersionBadge />
-      <LanguageSelector />
-    </span>
-  );
-
-  // 展开时在品牌行下面单独挂一条工具行：这三样（版本号 + 状态 + 语言选择）挤进品牌那一行
-  // 会把「CC Switch」压成省略号（英文语言名比中文还宽），单独一行默认宽度就放得下。
-  const toolsRow = !collapsed && (
-    <div
-      className="flex h-7 shrink-0 items-center justify-end gap-0.5 px-2"
-      {...DRAG_REGION_ATTR}
-      style={DRAG_REGION_STYLE as React.CSSProperties}
-    >
-      {topBarTools}
-    </div>
-  );
-
   // macOS 展开：顶条只放红绿灯；下面一行贴近红绿灯放 logo + 名字，收起箭头放在这一行最右边
   if (!collapsed && isMac()) {
     return (
@@ -222,7 +201,6 @@ function SidebarTopBar({
           </span>
           {toggleButton}
         </div>
-        {toolsRow}
       </>
     );
   }
@@ -271,7 +249,6 @@ function SidebarTopBar({
         )}
         {toggleButton}
       </div>
-      {toolsRow}
     </>
   );
 }

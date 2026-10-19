@@ -75,6 +75,8 @@ import {
 } from "@/components/shell/AppPageHeader";
 import { WindowControls } from "@/components/shell/WindowControls";
 import { APP_DISPLAY_NAME, AppGlyph } from "@/components/shell/AppGlyph";
+import { VersionBadge } from "@/components/shell/VersionBadge";
+import { LanguageSelector } from "@/components/shell/LanguageSelector";
 import { ProfileSwitcher } from "@/components/profiles/ProfileSwitcher";
 import { ProviderList } from "@/components/providers/ProviderList";
 import { AddProviderDialog } from "@/components/providers/AddProviderDialog";
@@ -1197,6 +1199,8 @@ function App() {
           )}
           {currentView === "hermesMemory" && <HermesMemorySaveButton />}
           {appMenu}
+          <VersionBadge />
+          <LanguageSelector />
         </>
       }
     />
