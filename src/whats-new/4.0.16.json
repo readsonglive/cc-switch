@@ -3,31 +3,31 @@
   "items": [
     {
       "type": "new",
-      "zh": "用量页新增「全网榜」Tab，实时展示 OpenRouter 模型调用排行榜与厂商 token 份额",
-      "zh-TW": "用量頁新增「全网榜」Tab，即時展示 OpenRouter 模型調用排行榜與廠商 token 份額",
-      "en": "New Rankings tab on Usage page shows real-time OpenRouter model leaderboards and vendor token share",
-      "ja": "用量ページにランキングタブを追加、OpenRouter のモデル呼び出しランキングとベンダー別トークンシェアをリアルタイム表示"
+      "zh": "托盘改为快捷面板，可查看用量并切换，设置里可换回旧菜单",
+      "zh-TW": "系統匣改為快捷面板，可查看用量並切換，設定裡可換回舊選單",
+      "en": "The tray now opens a quick panel for usage and switching; the old menu is in Settings",
+      "ja": "トレイがクイックパネルに。使用量の確認と切替が可能、旧メニューは設定で戻せます"
+    },
+    {
+      "type": "fix",
+      "zh": "修复 Codex 聚合会话卡住、路由下重启丢失 ChatGPT 登录",
+      "zh-TW": "修正 Codex 聚合工作階段卡住、路由下重啟遺失 ChatGPT 登入",
+      "en": "Fixed stuck Codex aggregation sessions and the ChatGPT login lost on restart while routed",
+      "ja": "Codex 集約セッションの停止と、再起動で ChatGPT ログインが消える問題を修正"
+    },
+    {
+      "type": "fix",
+      "zh": "修复并行工具结果报 400，自填的 GPT 上下文窗口生效",
+      "zh-TW": "修正並行工具結果報 400，自填的 GPT 上下文視窗生效",
+      "en": "Fixed 400 errors on parallel tool results; configured GPT context windows now apply",
+      "ja": "並列ツール結果の 400 を修正、設定した GPT コンテキストウィンドウが有効に"
     },
     {
       "type": "new",
-      "zh": "用量页新增估算价格面板：勾选模型后按本地 token 计数 × 定价表单价实时计算",
-      "zh-TW": "用量頁新增估算價格面板：勾選模型後按本地 token 計數 × 定價表單價實時計算",
-      "en": "New price estimate panel: tick models and compute cost in real time based on local token counts × pricing table",
-      "ja": "見積もり価格パネルを追加、モデルを選択するとローカルトークン数×価格表でリアルタイム計算"
-    },
-    {
-      "type": "new",
-      "zh": "用量页新增 4 格个人洞察：主力模型、缓存命中率、输入/输出比、Top1 vs Top2 差异",
-      "zh-TW": "用量頁新增 4 格個人洞察：主力模型、緩存命中率、輸入/輸出比、Top1 vs Top2 差異",
-      "en": "New 4-panel personal insights: top model, cache hit rate, input/output ratio, and top-2 gap",
-      "ja": "個人インサイト 4 枠を追加（主力モデル、キャッシュヒット率、入出力比、トップ2差）"
-    },
-    {
-      "type": "new",
-      "zh": "侧栏顶栏右侧新增版本号（带是否最新状态）+ 语言选择器 + 宽度可拖拽调整",
-      "zh-TW": "側欄頂欄右側新增版本號（帶是否最新版狀態）+ 語言選擇器 + 寬度可拖拽調整",
-      "en": "Sidebar topbar now shows version badge with latest status, language selector, and drag-to-resize width",
-      "ja": "サイドバーのトップバーにバージョンバッジ（最新状態付き）＋言語選択＋幅ドラッグ調整を追加"
+      "zh": "OpenCode 卡片可以设为默认模型；用量页新增全网榜 Tab、估算价格与个人洞察",
+      "zh-TW": "OpenCode 卡片可以設為預設模型；用量頁新增全網榜 Tab、估算價格與個人洞察",
+      "en": "OpenCode cards can set default model; Usage page gains Rankings tab, price estimates, and personal insights",
+      "ja": "OpenCode のカードからデフォルトモデルを設定可能に。用量ページにランキングタブ・見積もり価格・個人インサイトを追加"
     }
   ]
 }
