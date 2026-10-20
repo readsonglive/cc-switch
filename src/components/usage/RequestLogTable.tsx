@@ -104,6 +104,7 @@ const APP_SHORT_NAME: Record<AppGlyphApp, string> = {
   mcode: "MiniMax",
   codebuddy: "CodeBuddy",
   workbuddy: "WorkBuddy",
+  agy: "AgY",
 };
 
 export function appShortName(appType: string): string {

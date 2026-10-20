@@ -2605,7 +2605,8 @@
       "settingsHint": "在此填写 API Key。留空时自动从已配置的供应商探测。",
       "settingsFallback": "未填写时自动使用已配置的 OpenRouter 供应商 Key。",
       "apiKeyPlaceholder": "sk-or-…"
-    }
+    },
+    "agyUsageHint": "Antigravity 显示原生会话的 Token 计数器；缺失的历史模型为未知。日志不提供可靠的计费数据，显示成本为 0 不代表使用免费。"
   },
   "usageScript": {
     "title": "配置用量查询",

@@ -2605,7 +2605,8 @@
       "settingsHint": "Enter your OpenRouter API key. Left blank to auto-detect from providers.",
       "settingsFallback": "Auto-detected from configured OpenRouter provider if not set.",
       "apiKeyPlaceholder": "sk-or-…"
-    }
+    },
+    "agyUsageHint": "Antigravity shows native session token counters; missing historical models are unknown. The log does not provide reliable billing data; a displayed cost of 0 does not mean free usage."
   },
   "usageScript": {
     "title": "Configure Usage Query",
