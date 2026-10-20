@@ -167,6 +167,16 @@ pub fn sync_all_unlocked(db: &Database) -> SessionSyncResult {
         "MCode",
         crate::services::session_usage_mcode::sync_mcode_usage(db),
     );
+    merge_sync_step(
+        &mut result,
+        "CodeBuddy",
+        crate::services::session_usage_codebuddy::sync_codebuddy_usage(db),
+    );
+    merge_sync_step(
+        &mut result,
+        "WorkBuddy",
+        crate::services::session_usage_workbuddy::sync_workbuddy_usage(db),
+    );
     notify_sync_result(&result);
     record_sync_completed(chrono::Utc::now().timestamp_millis());
     result

@@ -1,10 +1,18 @@
 import { Monitor, Terminal } from "lucide-react";
 import type { AppId } from "@/lib/api";
+import type { AppType } from "@/types/usage";
 import { ProviderIcon } from "@/components/ProviderIcon";
 import { cn } from "@/lib/utils";
 
+/**
+ * 有图标/名字的应用：可管理应用（AppId）+ 仅用量统计来源（AppType）。
+ * 纯用量来源（codebuddy/workbuddy）不在 AppId 里，但仪表盘要渲染它们，
+ * 所以两张表都按并集建索引；漏键会编译报错。
+ */
+export type AppGlyphApp = AppId | AppType;
+
 /** 应用名：品牌名不翻译，四种语言都写原文。 */
-export const APP_DISPLAY_NAME: Record<AppId, string> = {
+export const APP_DISPLAY_NAME: Record<AppGlyphApp, string> = {
   claude: "Claude Code",
   "claude-desktop": "Claude Desktop",
   codex: "Codex",
@@ -15,9 +23,11 @@ export const APP_DISPLAY_NAME: Record<AppId, string> = {
   hermes: "Hermes",
   pi: "Pi",
   mcode: "MiniMax Code",
+  codebuddy: "CodeBuddy",
+  workbuddy: "WorkBuddy",
 };
 
-const APP_ICON_NAME: Record<AppId, string> = {
+const APP_ICON_NAME: Record<AppGlyphApp, string> = {
   claude: "claude",
   "claude-desktop": "claude",
   codex: "openai",
@@ -28,16 +38,18 @@ const APP_ICON_NAME: Record<AppId, string> = {
   hermes: "hermes",
   pi: "pi",
   mcode: "minimax",
+  codebuddy: "codebuddy",
+  workbuddy: "workbuddy",
 };
 
 // Claude Code 和 Claude Desktop 用同一个图标，靠右下角的小角标区分终端与桌面
-const APP_BADGE_ICON: Partial<Record<AppId, typeof Terminal>> = {
+const APP_BADGE_ICON: Partial<Record<AppGlyphApp, typeof Terminal>> = {
   claude: Terminal,
   "claude-desktop": Monitor,
 };
 
 interface AppGlyphProps {
-  app: AppId;
+  app: AppGlyphApp;
   /** 图标边长：侧栏 16，页头 20 */
   size?: number;
   /** 角标底色要和所在的行一致，否则看起来像缺了一块 */

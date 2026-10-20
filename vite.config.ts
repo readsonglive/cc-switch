@@ -3,6 +3,20 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { codeInspectorPlugin } from "code-inspector-plugin";
 
+/** 注入构建日期（yyyy-MM-dd），每次 vite build 时更新 */
+function injectBuildDate() {
+  const buildDate = new Date().toISOString().slice(0, 10);
+  return {
+    name: "inject-build-date",
+    config(config) {
+      config.define = {
+        ...config.define,
+        __BUILD_DATE__: JSON.stringify(buildDate),
+      };
+    },
+  };
+}
+
 export default defineConfig(({ command }) => ({
   root: "src",
   plugins: [
@@ -11,6 +25,7 @@ export default defineConfig(({ command }) => ({
         bundler: "vite",
       }),
     react(),
+    injectBuildDate(),
   ].filter(Boolean),
   base: "./",
   build: {

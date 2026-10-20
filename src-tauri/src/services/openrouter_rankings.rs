@@ -120,20 +120,16 @@ pub fn parse_rankings(body: &serde_json::Value) -> RankingsResponse {
 }
 
 /// 取数：瞬时失败 Err，确定性失败 Ok(status != "ok")。
-/// period 取值 `rankings-daily`（周榜 / 月榜走同一个接口，前端按日期窗口切）。
-pub async fn fetch_model_rankings(api_key: &str, period: &str) -> Result<RankingsResponse, String> {
+/// period 参数仅用于 API 兼容；实际端点固定为 `rankings-daily`，前端按日期窗口切分周/月。
+pub async fn fetch_model_rankings(
+    api_key: &str,
+    _period: &str,
+) -> Result<RankingsResponse, String> {
     let client = crate::proxy::http_client::get();
-    let url = format!(
-        "https://openrouter.ai/api/v1/{period}",
-        period = if period.is_empty() {
-            "rankings-daily"
-        } else {
-            period
-        }
-    );
+    let url = "https://openrouter.ai/api/v1/rankings-daily";
 
     let resp = client
-        .get(&url)
+        .get(url)
         .header("Authorization", format!("Bearer {api_key}"))
         .header("Accept", "application/json")
         .timeout(Duration::from_secs(20))

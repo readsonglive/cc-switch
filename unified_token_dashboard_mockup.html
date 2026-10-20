@@ -1,0 +1,117 @@
+<div style="font-family: var(--font-sans); color: var(--color-text-primary);">
+  <h2 class="sr-only">Unified AI token and cost dashboard mockup for Copilot Gemini opencode ZCode Orca</h2>
+
+  <div style="display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:12px; margin-bottom:16px;">
+    <div style="background:var(--color-background-secondary); border-radius:var(--border-radius-md); padding:1rem;">
+      <p style="margin:0; font-size:13px; color:var(--color-text-secondary);">累计 Token</p>
+      <p style="margin:0; font-size:24px; font-weight:500;">8.4M</p>
+    </div>
+    <div style="background:var(--color-background-secondary); border-radius:var(--border-radius-md); padding:1rem;">
+      <p style="margin:0; font-size:13px; color:var(--color-text-secondary);">本月消耗</p>
+      <p style="margin:0; font-size:24px; font-weight:500;">1.9M</p>
+    </div>
+    <div style="background:var(--color-background-secondary); border-radius:var(--border-radius-md); padding:1rem;">
+      <p style="margin:0; font-size:13px; color:var(--color-text-secondary);">预估花费</p>
+      <p style="margin:0; font-size:24px; font-weight:500;">¥ 312</p>
+    </div>
+    <div style="background:var(--color-background-secondary); border-radius:var(--border-radius-md); padding:1rem;">
+      <p style="margin:0; font-size:13px; color:var(--color-text-secondary);">活跃会话</p>
+      <p style="margin:0; font-size:24px; font-weight:500;">3</p>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:16px;">
+    <div style="background:var(--color-background-secondary); border-radius:var(--border-radius-lg); padding:1rem;">
+      <p style="margin:0 0 8px; font-size:13px; font-weight:500;">每日 Token 消耗（柱=总量，线=输入/输出）</p>
+      <div style="position:relative; width:100%; height:200px;">
+        <canvas id="trendChart" role="img" aria-label="Daily token consumption composite chart"></canvas>
+      </div>
+      <div style="display:flex; gap:16px; font-size:12px; color:var(--color-text-secondary); margin-top:6px;">
+        <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; border-radius:2px; background:#378ADD;"></span>总 Token</span>
+        <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:3px; background:#1D9E75;"></span>输入</span>
+        <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:3px; background:#D85A30;"></span>输出</span>
+      </div>
+    </div>
+
+    <div style="background:var(--color-background-secondary); border-radius:var(--border-radius-lg); padding:1rem;">
+      <p style="margin:0 0 8px; font-size:13px; font-weight:500;">按工具消耗占比（Stacked Bar）</p>
+      <div style="position:relative; width:100%; height:200px;">
+        <canvas id="toolChart" role="img" aria-label="Token consumption by tool stacked bar"></canvas>
+      </div>
+      <div style="display:flex; flex-wrap:wrap; gap:12px; font-size:12px; color:var(--color-text-secondary); margin-top:6px;">
+        <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; border-radius:2px; background:#378ADD;"></span>Copilot</span>
+        <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; border-radius:2px; background:#1D9E75;"></span>Gemini</span>
+        <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; border-radius:2px; background:#7F77DD;"></span>opencode</span>
+        <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; border-radius:2px; background:#BA7517;"></span>ZCode</span>
+        <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; border-radius:2px; background:#D85A30;"></span>Orca</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+    <div style="background:var(--color-background-secondary); border-radius:var(--border-radius-lg); padding:1rem;">
+      <p style="margin:0 0 8px; font-size:13px; font-weight:500;">Running Meter（本次会话）</p>
+      <p style="margin:0 0 6px; font-size:24px; font-weight:500; font-family:var(--font-mono);">¥ 0.42</p>
+      <div style="height:12px; border-radius:6px; background:var(--color-background-tertiary); overflow:hidden; display:flex;">
+        <div style="width:62%; background:#378ADD;"></div>
+        <div style="width:29%; background:#7F77DD;"></div>
+        <div style="width:9%; background:#BA7517;"></div>
+      </div>
+      <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--color-text-secondary); margin-top:6px;">
+        <span>Gemini-Pro 62%</span><span>Claude 29%</span><span>GLM 9%</span>
+      </div>
+      <button style="margin-top:10px; padding:4px 12px; font-size:12px; border:0.5px solid var(--color-border-secondary); border-radius:var(--border-radius-md); background:transparent; color:var(--color-text-danger); cursor:pointer;">停止</button>
+    </div>
+
+    <div style="background:var(--color-background-secondary); border-radius:var(--border-radius-lg); padding:1rem;">
+      <p style="margin:0 0 8px; font-size:13px; font-weight:500;">活跃度热力图（周×时段）</p>
+      <div id="heatmap" style="display:grid; grid-template-columns: repeat(12, 1fr); gap:3px;"></div>
+      <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--color-text-tertiary); margin-top:6px;">
+        <span>周一</span><span>周日</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+  const days = ['10-09','10-10','10-11','10-12','10-13','10-14','10-15'];
+  const total = [620, 740, 510, 980, 1120, 860, 540];
+  const input = [420, 500, 360, 690, 780, 600, 380];
+  const output = [200, 240, 150, 290, 340, 260, 160];
+  new Chart(document.getElementById('trendChart'), {
+    type: 'bar',
+    data: { labels: days, datasets: [
+      { type:'bar', label:'总Token', data: total, backgroundColor:'#378ADD', order:3 },
+      { type:'line', label:'输入', data: input, borderColor:'#1D9E75', borderWidth:2, pointRadius:0, fill:false, order:1 },
+      { type:'line', label:'输出', data: output, borderColor:'#D85A30', borderWidth:2, pointRadius:0, fill:false, order:2 }
+    ]},
+    options: { responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{ x:{ ticks:{color:'#B4B2A9', font:{size:10}}, grid:{display:false} },
+               y:{ ticks:{color:'#B4B2A9', font:{size:10}}, grid:{color:'rgba(180,178,169,.15)'} } } }
+  });
+  new Chart(document.getElementById('toolChart'), {
+    type: 'bar',
+    data: { labels: ['10-09','10-10','10-11','10-12','10-13','10-14','10-15'],
+      datasets: [
+        { label:'Copilot', data:[180,210,150,260,300,240,150], backgroundColor:'#378ADD' },
+        { label:'Gemini', data:[160,190,130,250,290,210,140], backgroundColor:'#1D9E75' },
+        { label:'opencode', data:[140,160,110,220,260,180,120], backgroundColor:'#7F77DD' },
+        { label:'ZCode', data:[90,110,80,170,190,140,80], backgroundColor:'#BA7517' },
+        { label:'Orca', data:[50,70,40,80,90,70,50], backgroundColor:'#D85A30' }
+      ]},
+    options: { responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{ x:{ stacked:true, ticks:{color:'#B4B2A9', font:{size:10}}, grid:{display:false} },
+               y:{ stacked:true, ticks:{color:'#B4B2A9', font:{size:10}}, grid:{color:'rgba(180,178,169,.15)'} } } }
+  });
+  const hm = document.getElementById('heatmap');
+  const palette = ['#2C2C2A','#0F6E56','#1D9E75','#5DCAA5','#9FE1CB'];
+  for (let i=0;i<84;i++){
+    const v = Math.floor(Math.random()*5);
+    const c = document.createElement('div');
+    c.style.cssText = 'aspect-ratio:1; border-radius:2px; background:'+palette[v]+';';
+    hm.appendChild(c);
+  }
+</script>

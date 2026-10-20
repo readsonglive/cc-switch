@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>全网 Token 个人使用排行榜</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1f232c; --line:#2a2f3a;
+    --txt:#e6e9ef; --muted:#9aa3b2; --accent:#5b8cff; --accent2:#36d399;
+    --warn:#fbbf24; --danger:#f87272; --purple:#a78bfa;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font-family:-apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;font-size:14px}
+  header{padding:18px 22px;border-bottom:1px solid var(--line);background:var(--panel)}
+  header h1{margin:0;font-size:19px}
+  header p{margin:4px 0 0;color:var(--muted);font-size:12.5px}
+  .wrap{display:grid;grid-template-columns:320px 1fr;gap:16px;padding:16px}
+  @media(max-width:880px){.wrap{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
+  .card h2{margin:0 0 12px;font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+  input,select,button{width:100%;background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:13px}
+  input:focus,select:focus{outline:none;border-color:var(--accent)}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  button{cursor:pointer;background:var(--accent);border:none;color:#fff;font-weight:600;margin-top:10px}
+  button.sec{background:var(--panel2);border:1px solid var(--line);color:var(--txt);font-weight:500}
+  button.danger{background:transparent;border:1px solid var(--danger);color:var(--danger)}
+  .small{font-size:11.5px;color:var(--muted);margin-top:8px;line-height:1.5}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+  @media(max-width:880px){.kpis{grid-template-columns:repeat(2,1fr)}}
+  .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .kpi .v{font-size:22px;font-weight:700}
+  .kpi .l{font-size:11.5px;color:var(--muted);margin-top:3px}
+  .tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+  .tab{padding:8px 14px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);cursor:pointer;font-size:13px}
+  .tab.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:600;font-size:12px;cursor:pointer;user-select:none}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  .rank{display:inline-block;width:20px;height:20px;line-height:20px;text-align:center;border-radius:50%;background:var(--panel2);font-size:11px;margin-right:6px}
+  .rank.top{background:var(--accent);color:#fff}
+  .chart-box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px;height:300px}
+  .bar{height:8px;background:var(--panel2);border-radius:6px;overflow:hidden;margin-top:6px}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--purple))}
+  .empty{color:var(--muted);text-align:center;padding:30px}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--accent2);color:#06281c;padding:10px 18px;border-radius:10px;font-weight:600;opacity:0;transition:.3s;pointer-events:none;z-index:50}
+  .toast.show{opacity:1}
+  .recent{max-height:280px;overflow:auto}
+  .recent td{font-size:12px}
+  .del{cursor:pointer;color:var(--danger);font-weight:700;text-align:center}
+  .kv{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .kv .item{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .kv .item .v{font-size:17px;font-weight:700}
+  .kv .item .l{font-size:11px;color:var(--muted);margin-top:2px}
+  .up{color:var(--danger)} .down{color:var(--accent2)}
+  .mini-tabs{display:flex;gap:6px;margin-bottom:10px}
+  .mini-tabs .tab{padding:5px 12px;font-size:12px;margin:0}
+</style>
+</head>
+<body>
+<header>
+  <h1>全网 Token 个人使用排行榜</h1>
+  <p>聚合你所有 AI 平台 / 模型 / 项目（OpenCode Zen · Orca · Claude · Codex · Cursor …）的 token 消耗，按维度排名。数据存本地浏览器，不上传。</p>
+</header>
+
+<div class="wrap">
+  <!-- 左：录入 + 最近 -->
+  <div>
+    <div class="card">
+      <h2>数据</h2>
+      <button class="sec" id="btn-sample">载入示例数据</button>
+      <button class="sec" id="btn-import">导入 CSV</button>
+      <button class="sec" id="btn-export">导出 CSV</button>
+      <button class="danger" id="btn-clear">清空全部</button>
+      <input type="file" id="file-input" accept=".csv" style="display:none">
+      <div class="small">CSV 列：date,platform,project,model,input_tokens,output_tokens,cost</div>
+    </div>
+
+    <div class="card">
+      <h2>最近记录</h2>
+      <div class="recent"><table id="tbl-recent"><tbody></tbody></table></div>
+      <div class="small">点右侧 ✕ 删除该条记录。</div>
+    </div>
+  </div>
+
+  <!-- 右：KPI + 洞察 + 排行 + 图 -->
+  <div>
+    <div class="kpis">
+      <div class="kpi"><div class="v" id="k-total">0</div><div class="l">总 tokens</div></div>
+      <div class="kpi"><div class="v" id="k-in">0</div><div class="l">输入 tokens</div></div>
+      <div class="kpi"><div class="v" id="k-out">0</div><div class="l">输出 tokens</div></div>
+      <div class="kpi"><div class="v" id="k-cost">¥0</div><div class="l">总费用</div></div>
+    </div>
+
+    <div class="card">
+      <h2>洞察</h2>
+      <div class="kv">
+        <div class="item"><div class="v" id="ins-free">—</div><div class="l">免费平台 token 占比</div></div>
+        <div class="item"><div class="v" id="ins-plat">—</div><div class="l">最贵平台（按费用）</div></div>
+        <div class="item"><div class="v" id="ins-model">—</div><div class="l">最贵模型（按费用）</div></div>
+        <div class="item"><div class="v" id="ins-wow">—</div><div class="l">近 7 日 vs 前 7 日（总量）</div></div>
+      </div>
+      <div class="small">费用以录入 / 导入的值为准；免费平台请填 0 或留空（OpenCode Zen、Space Bunny 等）。</div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" data-dim="platform">按平台</div>
+      <div class="tab" data-dim="project">按项目</div>
+      <div class="tab" data-dim="model">按模型</div>
+      <div class="tab" data-dim="date">按日期</div>
+    </div>
+
+    <div class="card">
+      <h2 id="lb-title">排行榜 · 平台</h2>
+      <table id="tbl-lb"><thead><tr>
+        <th>#</th><th class="sort" data-k="name">维度</th>
+        <th class="num sort" data-k="total">总 tokens</th>
+        <th class="num sort" data-k="cost">费用</th>
+        <th class="num sort" data-k="rec">记录数</th>
+      </tr></thead><tbody></tbody></table>
+    </div>
+
+    <div class="card">
+      <h2>占比可视化</h2>
+      <div class="chart-box"><canvas id="chart"></canvas></div>
+      <div class="small" id="chart-note"></div>
+    </div>
+
+    <div class="card">
+      <h2>趋势曲线 · 用量</h2>
+      <div class="tabs" id="line-tabs">
+        <div class="tab active" data-type="day">日</div>
+        <div class="tab" data-type="week">周</div>
+        <div class="tab" data-type="month">月</div>
+        <div class="tab" data-type="year">年</div>
+        <div class="tab" data-type="custom">每 X 日/周/月/年</div>
+      </div>
+      <div id="custom-row" style="display:none;align-items:flex-end;gap:8px;flex-wrap:wrap">
+        <div style="flex:0 0 110px"><label>每 X</label><input id="cust-x" type="number" min="1" value="3"></div>
+        <div style="flex:1;min-width:200px"><label>单位</label>
+          <div class="tabs" id="cust-units" style="margin:0">
+            <div class="tab active" data-u="day">日</div>
+            <div class="tab" data-u="week">周</div>
+            <div class="tab" data-u="month">月</div>
+            <div class="tab" data-u="year">年</div>
+          </div>
+        </div>
+      </div>
+      <div class="mini-tabs" id="line-mode">
+        <div class="tab active" data-mode="total">总量</div>
+        <div class="tab" data-mode="platform">按平台堆叠</div>
+      </div>
+      <div class="chart-box"><canvas id="line"></canvas></div>
+      <div class="small" id="line-note"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const LS_KEY = "token_leaderboard_v1";
+let data = load();
+let sortKey = "total", sortDir = -1;
+
+const PLAT_COLORS = ["#5b8cff","#36d399","#a78bfa","#fbbf24","#f87272","#22d3ee","#fb923c","#c084fc"];
+
+function load(){ try{ return JSON.parse(localStorage.getItem(LS_KEY))||[] }catch(e){ return [] } }
+function save(){ localStorage.setItem(LS_KEY, JSON.stringify(data)) }
+function toast(m){ const t=document.getElementById("toast"); t.textContent=m; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1600) }
+function fmt(n){ return (n||0).toLocaleString("en-US") }
+function money(n){ return "¥"+(n||0).toLocaleString("en-US",{maximumFractionDigits:2}) }
+function fmtCn(n){ // 万 / 千万 / 亿 中文单位
+  n = n||0; const a=Math.abs(n);
+  if(a >= 1e8) return (n/1e8).toFixed(2).replace(/\.?0+$/,"")+"亿";
+  if(a >= 1e7) return (n/1e7).toFixed(2).replace(/\.?0+$/,"")+"千万";
+  if(a >= 1e4) return (n/1e4).toFixed(2).replace(/\.?0+$/,"")+"万";
+  return n.toLocaleString("en-US");
+}
+function fmtDate(ms){ return new Date(ms).toISOString().slice(0,10); }
+// 把日期按粒度（日/周/月/年，size 倍）归桶，返回桶标签（同时可排序）
+function aggPeriod(dateStr, type, size){
+  const [y,m,d]=dateStr.split("-").map(Number);
+  const dayIdx=Math.floor(Date.UTC(y,m-1,d)/86400000);
+  if(type==="day"){ const k=Math.floor(dayIdx/size); return fmtDate(k*size*86400000); }
+  if(type==="week"){ const k=Math.floor(Math.floor(dayIdx/7)/size); return fmtDate(k*size*7*86400000); }
+  if(type==="month"){ const base=y*12+(m-1); const k=Math.floor(base/size); const rm=k*size; return Math.floor(rm/12)+"-"+String(rm%12+1).padStart(2,"0"); }
+  const k=Math.floor(y/size); return String(k*size); // year
+}
+let lineType="day";
+let lineMode="total";
+
+document.getElementById("btn-sample").onclick = ()=>{
+  const s = [["2026-10-01","OpenCode Zen","snow_motion","Muse Spark 1.3 Free",420000,180000,0],
+    ["2026-10-01","OpenCode Zen","snow_motion","MiMo-V2.6-Flash Free",120000,90000,0],
+    ["2026-10-02","Orca","DouYin2Live","Claude Sonnet 4",350000,140000,9.8],
+    ["2026-10-02","Orca","skiwall","Claude Opus 4",80000,40000,12.5],
+    ["2026-10-03","Codex","sportsReader","GPT-5.1-codex",260000,110000,7.2],
+    ["2026-10-03","OpenCode Zen","XHS","Nemotron 3 Ultra Free",520000,60000,0],
+    ["2026-10-04","Claude","滑雪剪辑App","Claude Sonnet 4",190000,95000,5.1],
+    ["2026-10-04","OpenCode Zen","snow_motion","Space Bunny Free",310000,130000,0]];
+  data = s.map(r=>({date:r[0],platform:r[1],project:r[2],model:r[3],in:r[4],out:r[5],cost:r[6],total:r[4]+r[5]}));
+  save(); render(); toast("已载入示例");
+};
+
+document.getElementById("btn-clear").onclick = ()=>{ if(confirm("确认清空全部记录？")){ data=[]; save(); render(); toast("已清空") } };
+
+document.getElementById("btn-export").onclick = ()=>{
+  const head="date,platform,project,model,input_tokens,output_tokens,cost\n";
+  const body=data.map(r=>`${r.date},${r.platform},${r.project},${r.model},${r.in},${r.out},${r.cost}`).join("\n");
+  const blob=new Blob([head+body],{type:"text/csv"}); const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download="token_usage.csv"; a.click(); toast("已导出 CSV");
+};
+
+document.getElementById("btn-import").onclick = ()=>document.getElementById("file-input").click();
+// 容错 CSV 解析（支持引号内的逗号）
+function parseCSV(text){
+  const rows=[]; let row=[], cur="", q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){
+      if(c==='"'){ if(text[i+1]==='"'){ cur+='"'; i++; } else q=false; }
+      else cur+=c;
+    } else {
+      if(c==='"') q=true;
+      else if(c===",") { row.push(cur); cur=""; }
+      else if(c==="\n"){ row.push(cur); rows.push(row); row=[]; cur=""; }
+      else if(c==="\r"){ /* skip */ }
+      else cur+=c;
+    }
+  }
+  if(cur.length>0 || row.length>0){ row.push(cur); rows.push(row); }
+  return rows;
+}
+document.getElementById("file-input").onchange = e=>{
+  const f=e.target.files[0]; if(!f) return; const rd=new FileReader();
+  rd.onload=()=>{
+    const rows=parseCSV(rd.result.trim());
+    const header=rows.shift(); // 丢弃表头
+    let n=0, dup=0;
+    rows.forEach(c=>{ if(c.length<7) return;
+      const rec={date:c[0],platform:c[1],project:c[2],model:c[3],in:+c[4],out:+c[5],cost:+c[6],total:(+c[4])+(+c[5])};
+      const exists=data.some(r=>r.date===rec.date&&r.platform===rec.platform&&r.project===rec.project&&r.model===rec.model&&r.in===rec.in&&r.out===rec.out&&r.cost===rec.cost);
+      if(exists){ dup++; return; }
+      data.push(rec); n++;
+    });
+    save(); render(); toast("导入 "+n+" 条"+(dup?(" · 跳过 "+dup+" 重复"):""));
+    e.target.value="";
+  };
+  rd.readAsText(f);
+};
+
+let curDim="platform";
+document.querySelectorAll(".tabs:not(#line-tabs):not(#cust-units):not(#line-mode) .tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll(".tabs:not(#line-tabs):not(#cust-units):not(#line-mode) .tab").forEach(x=>x.classList.remove("active"));
+  t.classList.add("active"); curDim=t.dataset.dim; render();
+});
+
+document.querySelectorAll("#line-tabs .tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll("#line-tabs .tab").forEach(x=>x.classList.remove("active"));
+  t.classList.add("active");
+  lineType=t.dataset.type;
+  document.getElementById("custom-row").style.display = (lineType==="custom")?"flex":"none";
+  render();
+});
+
+document.querySelectorAll("#line-mode .tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll("#line-mode .tab").forEach(x=>x.classList.remove("active"));
+  t.classList.add("active"); lineMode=t.dataset.mode; render();
+});
+
+let custUnit="day";
+document.querySelectorAll("#cust-units .tab").forEach(t=>t.onclick=()=>{
+  document.querySelectorAll("#cust-units .tab").forEach(x=>x.classList.remove("active"));
+  t.classList.add("active"); custUnit=t.dataset.u; if(lineType==="custom") render();
+});
+document.getElementById("cust-x").oninput=()=>{ if(lineType==="custom") render(); };
+document.querySelectorAll("th.sort").forEach(th=>th.onclick=()=>{
+  const k=th.dataset.k; if(sortKey===k) sortDir*=-1; else {sortKey=k; sortDir=-1}; render();
+});
+
+let chart, lineChart;
+function aggregate(dim){
+  const m={};
+  data.forEach(r=>{ const k = dim==="date"? r.date : r[dim];
+    if(!m[k]) m[k]={name:k,total:0,in:0,out:0,cost:0,rec:0};
+    m[k].total+=r.total; m[k].in+=r.in; m[k].out+=r.out; m[k].cost+=r.cost; m[k].rec++;
+  });
+  return Object.values(m);
+}
+
+function render(){
+  // KPI
+  const T=data.reduce((a,r)=>a+r.total,0), I=data.reduce((a,r)=>a+r.in,0),
+        O=data.reduce((a,r)=>a+r.out,0), C=data.reduce((a,r)=>a+r.cost,0);
+  document.getElementById("k-total").textContent=fmtCn(T);
+  document.getElementById("k-in").textContent=fmtCn(I);
+  document.getElementById("k-out").textContent=fmtCn(O);
+  document.getElementById("k-cost").textContent=money(C);
+
+  // 洞察
+  renderInsights(T,C);
+
+  // leaderboard
+  const rows=aggregate(curDim);
+  const sk = sortKey==="name"? "name" : sortKey;
+  rows.sort((a,b)=> sk==="name"? (sortDir>0? a.name.localeCompare(b.name): b.name.localeCompare(a.name))
+                                : (a[sk]-b[sk])*sortDir);
+  const dimLabel={platform:"平台",project:"项目",model:"模型",date:"日期"}[curDim];
+  document.getElementById("lb-title").textContent="排行榜 · "+dimLabel;
+  const tb=document.querySelector("#tbl-lb tbody"); tb.innerHTML="";
+  const max=Math.max(1,...rows.map(r=>r.total));
+  if(rows.length===0){ tb.innerHTML='<tr><td colspan="5" class="empty">暂无数据，先录入或载入示例</td></tr>'; }
+  rows.forEach((r,i)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td><span class="rank ${i<3?'top':''}">${i+1}</span></td>
+      <td>${r.name}<div class="bar"><i style="width:${r.total/max*100}%"></i></div></td>
+      <td class="num">${fmtCn(r.total)}</td>
+      <td class="num">${money(r.cost)}</td>
+      <td class="num">${r.rec}</td>`;
+    tb.appendChild(tr);
+  });
+
+  // chart
+  const top=rows.slice(0,10).reverse();
+  const ctx=document.getElementById("chart");
+  if(chart) chart.destroy();
+  chart=new Chart(ctx,{type:"bar",data:{labels:top.map(r=>r.name),
+    datasets:[{label:"总 tokens",data:top.map(r=>r.total),backgroundColor:"#5b8cff"},
+              {label:"费用 ¥",data:top.map(r=>r.cost),backgroundColor:"#36d399",yAxisID:"y2"}]},
+    options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:"#e6e9ef"}}},
+      scales:{x:{ticks:{color:"#9aa3b2"},grid:{color:"#2a2f3a"}},
+              y:{ticks:{color:"#e6e9ef",callback:v=>fmtCn(v)},grid:{color:"#2a2f3a"}},
+              y2:{position:"right",ticks:{color:"#36d399"},grid:{display:false}}}}});
+  document.getElementById("chart-note").textContent=
+    "蓝条=总 tokens（左轴，单位万/千万/亿），绿条=费用（右轴）。取 Top 10 "+dimLabel+"。";
+
+  // 趋势曲线
+  const pType = (lineType==="custom") ? custUnit : lineType;
+  const pSize = (lineType==="custom") ? Math.max(1, +document.getElementById("cust-x").value||1) : 1;
+  const byP={};
+  data.forEach(r=>{ const k=aggPeriod(r.date,pType,pSize); if(!byP[k]) byP[k]={total:0,cost:0}; byP[k].total+=r.total; byP[k].cost+=r.cost; });
+  const dates=Object.keys(byP).sort();
+  const lctx=document.getElementById("line");
+  if(lineChart) lineChart.destroy();
+  let datasets=[], yStacked=false;
+  if(lineMode==="total"){
+    datasets=[
+      {label:"总 tokens",data:dates.map(d=>byP[d].total),borderColor:"#5b8cff",backgroundColor:"rgba(91,140,255,.15)",fill:true,tension:.3,pointRadius:3,yAxisID:"y"},
+      {label:"费用 ¥",data:dates.map(d=>byP[d].cost),borderColor:"#36d399",backgroundColor:"rgba(54,211,153,.1)",fill:false,tension:.3,pointRadius:3,yAxisID:"y2"}
+    ];
+  } else {
+    // 按平台堆叠
+    const pm={}; data.forEach(r=>{ pm[r.platform]=(pm[r.platform]||0)+r.total; });
+    const topP=Object.entries(pm).sort((a,b)=>b[1]-a[1]).slice(0,6).map(x=>x[0]);
+    const byPP={}; data.forEach(r=>{ const k=aggPeriod(r.date,pType,pSize); byPP[r.platform]=byPP[r.platform]||{}; byPP[r.platform][k]=(byPP[r.platform][k]||0)+r.total; });
+    datasets=topP.map((p,i)=>({label:p,data:dates.map(d=>byPP[p][d]||0),
+      borderColor:PLAT_COLORS[i%PLAT_COLORS.length],backgroundColor:PLAT_COLORS[i%PLAT_COLORS.length]+"55",fill:true,tension:.2,pointRadius:2}));
+    yStacked=true;
+  }
+  lineChart=new Chart(lctx,{type:"line",data:{labels:dates,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:"#e6e9ef"}},
+        tooltip:{callbacks:{label:c=>c.dataset.yAxisID==="y2"?(" "+money(c.parsed.y)):(" "+fmtCn(c.parsed.y)+" tokens")}}},
+      scales:{x:{ticks:{color:"#9aa3b2"},grid:{color:"#2a2f3a"}},
+              y:{stacked:yStacked,ticks:{color:"#9aa3b2",callback:v=>fmtCn(v)},grid:{color:"#2a2f3a"}},
+              y2:{position:"right",ticks:{color:"#36d399"},grid:{display:false}}}}});
+  const unitName={day:"日",week:"周",month:"月",year:"年"}[pType];
+  const gran = (lineType==="custom") ? ("每 "+pSize+unitName) : (unitName+"粒度");
+  const modeName = (lineMode==="total") ? "总量" : "按平台堆叠(Top6)";
+  document.getElementById("line-note").textContent="当前："+gran+" · "+modeName+"。"+
+    (lineMode==="total"?" 折线=各周期总 tokens（左轴，填充面积），绿线=费用（右轴）。":" 面积=各平台 token 叠加。");
+
+  // recent（带删除）
+  const rt=document.querySelector("#tbl-recent tbody"); rt.innerHTML="";
+  const recent=[...data].map((r,idx)=>({r,idx})).reverse().slice(0,20);
+  if(recent.length===0){ rt.innerHTML='<tr><td colspan="5" class="empty">暂无记录</td></tr>'; }
+  recent.forEach(({r,idx})=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${r.date}</td><td>${r.platform}</td><td>${r.project}</td>
+      <td class="num">${fmtCn(r.total)}</td><td class="del" data-idx="${idx}">✕</td>`;
+    rt.appendChild(tr);
+  });
+  rt.querySelectorAll(".del").forEach(el=>el.onclick=()=>{
+    const i=+el.dataset.idx; data.splice(i,1); save(); render(); toast("已删除该记录");
+  });
+}
+
+function renderInsights(T,C){
+  // 免费占比
+  const freeT=data.filter(r=>r.cost===0).reduce((a,r)=>a+r.total,0);
+  const freePct = T>0 ? (freeT/T*100).toFixed(1)+"%" : "—";
+  document.getElementById("ins-free").textContent=freePct;
+  // 最贵平台 / 模型（按费用）
+  const byPlat={}, byModel={};
+  data.forEach(r=>{ byPlat[r.platform]=(byPlat[r.platform]||0)+r.cost; byModel[r.model]=(byModel[r.model]||0)+r.cost; });
+  const topPlat=Object.entries(byPlat).sort((a,b)=>b[1]-a[1])[0];
+  const topModel=Object.entries(byModel).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById("ins-plat").textContent = topPlat&&topPlat[1]>0 ? (topPlat[0]+" "+money(topPlat[1])) : "—";
+  document.getElementById("ins-model").textContent = topModel&&topModel[1]>0 ? (topModel[0]+" "+money(topModel[1])) : "—";
+  // 近7日 vs 前7日（按最新日期回推）
+  if(data.length){
+    const allDates=data.map(r=>r.date).sort();
+    const latest=allDates[allDates.length-1];
+    const ld=Date.parse(latest+"T00:00:00Z");
+    const inWin=(d,start,end)=>{ const t=Date.parse(d+"T00:00:00Z"); return t>=start&&t<=end; };
+    const end7=ld, start7=ld-6*86400000, start14=ld-13*86400000;
+    const last7=data.filter(r=>inWin(r.date,start7,end7)).reduce((a,r)=>a+r.total,0);
+    const prev7=data.filter(r=>inWin(r.date,start14,start7-86400000)).reduce((a,r)=>a+r.total,0);
+    let txt="—";
+    if(prev7>0){ const pct=((last7-prev7)/prev7*100); const cls=pct>=0?"up":"down";
+      txt=`<span class="${cls}">${pct>=0?"+":""}${pct.toFixed(0)}%</span>`; }
+    else if(last7>0){ txt=`<span class="up">新增</span>`; }
+    document.getElementById("ins-wow").innerHTML=txt;
+  } else {
+    document.getElementById("ins-wow").textContent="—";
+  }
+}
+render();
+</script>
+</body>
+</html>

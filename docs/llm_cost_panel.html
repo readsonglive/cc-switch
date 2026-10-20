@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM 调用成本比价面板</title>
+<style>
+  :root{
+    --bg:#0f1117; --card:#171a23; --card2:#1d2130; --line:#2a2f3e;
+    --txt:#e8eaf0; --mut:#9aa3b2; --acc:#4f8cff; --good:#37d39b; --warn:#ffb454; --bad:#ff6b6b;
+    --shadow:0 8px 24px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Sarasa Gothic SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:radial-gradient(1200px 600px at 80% -10%,#1b2236 0%,var(--bg) 55%);color:var(--txt);
+    padding:28px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1040px;margin:0 auto}
+  h1{font-size:22px;font-weight:700;letter-spacing:.3px}
+  .sub{color:var(--mut);font-size:13px;margin-top:4px}
+  .grid{display:grid;gap:16px;margin-top:22px}
+  .row2{grid-template-columns:1fr 1fr}
+  .row3{grid-template-columns:repeat(3,1fr)}
+  .row4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:820px){.row2,.row3,.row4{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow)}
+  .card h3{font-size:13px;color:var(--mut);font-weight:600;margin-bottom:12px;text-transform:uppercase;letter-spacing:.6px}
+  label{display:block;font-size:12px;color:var(--mut);margin:10px 0 5px}
+  input[type=number]{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--txt);
+    border-radius:9px;padding:10px 12px;font-size:15px;font-variant-numeric:tabular-nums}
+  input[type=number]:focus{outline:none;border-color:var(--acc)}
+  .hint{font-size:11px;color:var(--mut);margin-top:6px}
+  .seg{display:flex;gap:6px;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:4px;margin-top:10px}
+  .seg button{flex:1;background:transparent;border:0;color:var(--mut);padding:9px;border-radius:7px;cursor:pointer;font-size:14px;font-weight:600}
+  .seg button.on{background:var(--acc);color:#fff}
+  .big{font-size:30px;font-weight:800;letter-spacing:.5px;font-variant-numeric:tabular-nums}
+  .big.good{color:var(--good)} .big.warn{color:var(--warn)}
+  .unit{font-size:14px;color:var(--mut);font-weight:500}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:11px 10px;border-bottom:1px solid var(--line)}
+  th{color:var(--mut);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+  tr.best td{background:rgba(55,211,155,.10)}
+  .tag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:6px;background:rgba(79,140,255,.18);color:#9cc0ff;margin-left:6px}
+  .bar{height:7px;background:var(--card2);border-radius:5px;overflow:hidden;margin-top:6px}
+  .bar>i{display:block;height:100%;background:linear-gradient(90deg,#4f8cff,#37d39b);border-radius:5px}
+  tr.best .bar>i{background:linear-gradient(90deg,#37d39b,#a6f4d2)}
+  .warn-tag{color:var(--warn);font-size:12px}
+  .note{font-size:12px;color:var(--mut);margin-top:18px;line-height:1.7}
+  .note code{background:var(--card2);padding:1px 6px;border-radius:5px;color:#cdd6e6}
+  .btn{background:var(--card2);border:1px solid var(--line);color:var(--txt);padding:9px 14px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:600}
+  .btn:hover{border-color:var(--acc)}
+  .flex{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>LLM 调用成本比价面板</h1>
+  <div class="sub">输入 token 三段量 → 实时比价各大模型花费 · 汇率 ¥7.2≈$1 · 费率取自各家官方文档（检索于 2026-10-17）</div>
+
+  <div class="grid row2">
+    <div class="card">
+      <h3>① 填入本期用量（token 数）</h3>
+      <label>新增输入（缓存未命中）</label>
+      <input id="inMiss" type="number" value="132000000">
+      <label>Output（输出）</label>
+      <input id="inOut" type="number" value="8190000">
+      <label>命中（缓存命中）</label>
+      <input id="inHit" type="number" value="1580000000">
+      <div class="hint">提示：1亿 = 1×10⁸，1万 = 1×10⁴。已预填你本期快照（1.32亿 / 819万 / 15.8亿）。</div>
+      <div class="flex" style="margin-top:12px">
+        <button class="btn" onclick="resetSnap()">↺ 恢复本期快照</button>
+        <button class="btn" onclick="clearAll()">清空</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>② DeepSeek 调度档（影响本档预估）</h3>
+      <div class="seg" id="segs">
+        <button data-tier="np" class="on" onclick="setTier('np',this)">非高峰（当前）</button>
+        <button data-tier="pk" onclick="setTier('pk',this)">高峰</button>
+      </div>
+      <div class="hint" style="margin-top:10px">高峰 = 工作日 09:00–12:00、14:00–18:00（北京）。其余时段（含周末）为非高峰，费率约 1/3.5。</div>
+      <div style="margin-top:18px">
+        <div class="sub">你的花费（DeepSeek 本档）</div>
+        <div class="big good" id="dsCost">$0.00</div>
+        <div class="sub" id="dsCostRmb" style="margin-top:2px"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid row3">
+    <div class="card"><h3>最省方案</h3><div class="big good" id="bestName" style="font-size:20px">—</div><div class="big good" id="bestCost" style="font-size:26px;margin-top:4px">$0</div></div>
+    <div class="card"><h3>缓存节省（vs 无缓存）</h3><div class="big good" id="savePct">0%</div><div class="sub" id="saveAbs" style="margin-top:2px"></div></div>
+    <div class="card"><h3>缓存命中率</h3><div class="big warn" id="hitRate">0%</div><div class="sub" id="hitTok" style="margin-top:2px"></div></div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>③ 横向比价（按总花费升序）</h3>
+      <table>
+        <thead><tr><th>厂商 / 模型</th><th style="text-align:right">花费 (USD)</th><th style="text-align:right">花费 (¥)</th><th style="width:34%">相对成本</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>口径说明：</b>花费 = 新增输入×未命中价 + Output×输出价 + 命中×命中价（均按每 1M token 计）。
+    Grok 4.5 官方未单列缓存读取价，表中按"命中等同未命中输入"估算，数值偏保守、仅供下界参考。
+    DeepSeek flash 非高峰：命中 $0.006 / 未命中 $0.15 / 输出 $0.60；高峰约 ×3.5。
+    OpenAI GPT-5.6（Luna 低档 / Sol 旗舰）、Claude（Haiku 4.5 / Sonnet 5）、GLM-5.3（-Flash）、MiniMax M3、Gemini 4 Argon、Kimi K3 费率均取自官方文档。
+    价格为动态值，大批量前建议再核对应模型实时页。
+  </div>
+</div>
+
+<script>
+const FX = 7.2; // ¥ per $
+const RATES = {
+  deepseek_np:{name:"DeepSeek flash · 非高峰",cur:"usd",miss:0.15,hit:0.006,out:0.60},
+  deepseek_pk:{name:"DeepSeek flash · 高峰",  cur:"usd",miss:0.30,hit:0.044,out:1.20},
+  openai_luna:{name:"OpenAI GPT-5.6 Luna",    cur:"usd",miss:0.20,hit:0.02, out:1.20},
+  openai_sol :{name:"OpenAI GPT-5.6 Sol",     cur:"usd",miss:4.00,hit:0.40, out:20.00},
+  claude_h   :{name:"Claude Haiku 4.5",       cur:"usd",miss:1.00,hit:0.10, out:5.00},
+  claude_s   :{name:"Claude Sonnet 5",        cur:"usd",miss:2.00,hit:0.20, out:10.00},
+  glm_flash  :{name:"GLM-5.3-Flash",          cur:"rmb",miss:0.8, hit:0.23, out:2.8},
+  glm        :{name:"GLM-5.3",                cur:"rmb",miss:8.0, hit:2.00, out:28.0},
+  minimax    :{name:"MiniMax M3",             cur:"usd",miss:0.60,hit:0.12, out:2.40},
+  gemini     :{name:"Gemini 4 Argon",         cur:"usd",miss:2.00,hit:0.10, out:10.00},
+  kimi       :{name:"Kimi K3",                cur:"rmb",miss:20.0,hit:2.00, out:100.0},
+  grok       :{name:"Grok 4.5",               cur:"usd",miss:2.00,hit:null,out:6.00},
+};
+let tier = "np"; // deepseek 当前档
+
+function num(id){const v=parseFloat(document.getElementById(id).value);return isNaN(v)||v<0?0:v;}
+
+function costOf(r, miss, out, hit){
+  const hi = (r.hit==null)? r.miss : r.hit; // grok 无命中价→按未命中估
+  let usd;
+  if(r.cur==="rmb"){ const rmb=(miss/1e6)*r.miss+(out/1e6)*r.out+(hit/1e6)*hi; usd=rmb/FX; }
+  else { usd=(miss/1e6)*r.miss+(out/1e6)*r.out+(hit/1e6)*hi; }
+  return usd;
+}
+const fmtUsd = v => "$"+v.toLocaleString("en-US",{maximumFractionDigits:2,minimumFractionDigits:2});
+const fmtRmb = v => "¥"+Math.round(v).toLocaleString("en-US");
+
+function calc(){
+  const miss=num("inMiss"), out=num("inOut"), hit=num("inHit");
+  const total = miss+out+hit;
+  const hr = total>0 ? (hit/total*100) : 0;
+
+  // DeepSeek 本档
+  const dsKey = tier==="np"?"deepseek_np":"deepseek_pk";
+  const dsUsd = costOf(RATES[dsKey], miss, out, hit);
+  document.getElementById("dsCost").textContent = fmtUsd(dsUsd);
+  document.getElementById("dsCostRmb").textContent = fmtRmb(dsUsd*FX);
+
+  // 缓存节省（DeepSeek 非高峰）
+  const withC = costOf(RATES.deepseek_np, miss, out, hit);
+  const noC   = (miss+hit)/1e6*RATES.deepseek_np.miss + out/1e6*RATES.deepseek_np.out;
+  const savePct = noC>0 ? (1-withC/noC)*100 : 0;
+  document.getElementById("savePct").textContent = savePct.toFixed(1)+"%";
+  document.getElementById("saveAbs").textContent = "约省 "+fmtUsd(noC-withC)+" / "+fmtRmb((noC-withC)*FX);
+
+  // 命中率
+  document.getElementById("hitRate").textContent = hr.toFixed(1)+"%";
+  document.getElementById("hitTok").textContent = "命中 "+fmtInt(hit)+" token";
+
+  // 全表
+  const rows = Object.entries(RATES).map(([k,r])=>({key:k,name:r.name,usd:costOf(r,miss,out,hit)}));
+  rows.sort((a,b)=>a.usd-b.usd);
+  const minUsd = rows[0].usd;
+  const barMax = Math.max(...rows.filter(r=>r.key!=="grok").map(r=>r.usd)) || 1;
+
+  const tb = document.getElementById("tbody"); tb.innerHTML="";
+  rows.forEach((r,i)=>{
+    const isBest = i===0;
+    const isGrok = r.key==="grok";
+    const w = isGrok ? 100 : Math.min(100, r.usd/barMax*100);
+    const tr = document.createElement("tr");
+    if(isBest) tr.className="best";
+    tr.innerHTML = `<td>${r.name}${isBest?'<span class="tag">最省</span>':''}${isGrok?' <span class="warn-tag">⚠ 命中价未公开</span>':''}</td>`
+      + `<td class="num">${fmtUsd(r.usd)}</td>`
+      + `<td class="num">${fmtRmb(r.usd*FX)}</td>`
+      + `<td><div class="bar"><i style="width:${w}%"></i></div></td>`;
+    tb.appendChild(tr);
+  });
+
+  document.getElementById("bestName").textContent = rows[0].name;
+  document.getElementById("bestCost").textContent = fmtUsd(minUsd);
+}
+function fmtInt(v){ if(v>=1e8) return (v/1e8).toFixed(2)+"亿"; if(v>=1e4) return (v/1e4).toFixed(1)+"万"; return v.toLocaleString(); }
+
+function setTier(t,el){
+  tier=t;
+  document.querySelectorAll("#segs button").forEach(b=>b.classList.remove("on"));
+  el.classList.add("on");
+  calc();
+}
+function resetSnap(){document.getElementById("inMiss").value=132000000;document.getElementById("inOut").value=8190000;document.getElementById("inHit").value=1580000000;calc();}
+function clearAll(){document.getElementById("inMiss").value=0;document.getElementById("inOut").value=0;document.getElementById("inHit").value=0;calc();}
+
+["inMiss","inOut","inHit"].forEach(id=>document.getElementById(id).addEventListener("input",calc));
+calc();
+</script>
+</body>
+</html>

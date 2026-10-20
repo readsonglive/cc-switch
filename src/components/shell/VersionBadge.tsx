@@ -6,8 +6,13 @@ import { useUpdate } from "@/contexts/UpdateContext";
 import { settingsApi } from "@/lib/api/settings";
 import { cn } from "@/lib/utils";
 
+declare const __BUILD_DATE__: string;
+
 /** GitHub 最新发布页链接 */
 const RELEASES_URL = "https://github.com/farion1231/cc-switch/releases/latest";
+
+/** 构建人（本 fork 的维护者） */
+const BUILD_AUTHOR = "readsonglive";
 
 /** update=查到新版本；latest=查过且没新版本；null=还不知道（没查完 / 查失败了）。 */
 export type VersionStatus = "update" | "latest" | null;
@@ -81,6 +86,9 @@ export function VersionBadge({ version }: { version?: string }) {
             · {statusLabel}
           </span>
         )}
+        <span className="opacity-60">
+          · {__BUILD_DATE__} · {BUILD_AUTHOR}
+        </span>
       </button>
     </HoverTip>
   );
